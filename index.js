@@ -8,7 +8,6 @@ const winston = require('winston');
 
 const database = require('./lib/database');
 require('./lib/auth');
-const authRoutes = require('./routes/auth');
 const contentRoutes = require('./routes/content');
 
 const logger = winston.createLogger({
@@ -47,7 +46,38 @@ app.use(passport.session());
 
 app.use(express.static('public'));
 
-app.use('/auth', authRoutes);
+// Auth routes at root level
+app.get('/login', passport.authenticate('zombieauth'));
+
+app.get('/callback',
+  passport.authenticate('zombieauth', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/');
+  }
+);
+
+app.post('/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.json({ message: 'Logged out successfully' });
+  });
+});
+
+app.get('/user', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({
+      id: req.user._id,
+      email: req.user.email,
+      name: req.user.name,
+      roles: req.user.roles
+    });
+  } else {
+    res.status(401).json({ error: 'Not authenticated' });
+  }
+});
+
 app.use('/api/content', contentRoutes);
 
 app.get('/health', async (req, res) => {

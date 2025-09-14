@@ -1,6 +1,6 @@
 async function checkAuth() {
     try {
-        const response = await fetch('/auth/user');
+        const response = await fetch('/user');
         if (response.ok) {
             const user = await response.json();
             showLoggedInState(user);
@@ -25,12 +25,12 @@ function showLoggedInState(user) {
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
-        '<a href="/auth/login" class="auth-button">Login / Sign Up</a>';
+        '<a href="/login" class="auth-button">Login / Sign Up</a>';
 }
 
 async function logout() {
     try {
-        const response = await fetch('/auth/logout', { method: 'POST' });
+        const response = await fetch('/logout', { method: 'POST' });
         if (response.ok) {
             showLoggedOutState();
         } else {
