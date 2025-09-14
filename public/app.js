@@ -23,7 +23,7 @@ function showLoggedInState(user) {
 
     // Add admin link if user has admin role
     if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button" style="margin-right: 0.5rem; text-decoration: none;">Admin</a>' + authButtons;
+        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
     }
 
     document.getElementById('auth-section').innerHTML = authButtons;
