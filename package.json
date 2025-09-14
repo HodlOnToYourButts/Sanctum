@@ -1,5 +1,5 @@
 {
-  "name": "sanctum-cms",
+  "name": "sanctum",
   "version": "0.1.0",
   "description": "Distributed content management system with CouchDB and ZombieAuth OIDC",
   "main": "index.js",

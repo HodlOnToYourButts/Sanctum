@@ -19,7 +19,7 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'sanctum-cms.log' })
+    new winston.transports.File({ filename: 'sanctum.log' })
   ]
 });
 
@@ -56,7 +56,7 @@ app.get('/health', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Sanctum CMS API',
+    message: 'Sanctum API',
     version: '0.1.0',
     instance: process.env.INSTANCE_ID || 'unknown',
     endpoints: {
@@ -72,7 +72,7 @@ async function start() {
     await database.connect();
 
     app.listen(PORT, () => {
-      logger.info(`Sanctum CMS running on port ${PORT}`, {
+      logger.info(`Sanctum running on port ${PORT}`, {
         instance: process.env.INSTANCE_ID || 'unknown',
         port: PORT
       });

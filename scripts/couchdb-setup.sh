@@ -2,12 +2,12 @@
 
 set -e
 
-echo "Setting up CouchDB for Sanctum CMS..."
+echo "Setting up CouchDB for Sanctum..."
 
 COUCHDB_URL=${COUCHDB_URL:-"http://localhost:5984"}
 COUCHDB_USERNAME=${COUCHDB_USERNAME:-"admin"}
 COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-"password"}
-CMS_DATABASE=${CMS_DATABASE:-"sanctumcms"}
+CMS_DATABASE=${CMS_DATABASE:-"sanctum"}
 
 echo "Checking CouchDB connection..."
 curl -s "${COUCHDB_URL}/" > /dev/null || {

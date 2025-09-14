@@ -3,7 +3,7 @@ npm-debug.log*
 .git
 .gitignore
 .env
-sanctum-cms.log
+sanctum.log
 README.md
 .dockerignore
 Dockerfile
