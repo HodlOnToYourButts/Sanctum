@@ -60,8 +60,8 @@ router.get('/', async (req, res) => {
     const result = await db.find({
       selector,
       limit: parseInt(limit),
-      skip: parseInt(skip),
-      sort: [{ 'created_at': 'desc' }]
+      skip: parseInt(skip)
+      // Remove sort for now to avoid index requirement
     });
 
     const items = result.docs.map(doc => ({

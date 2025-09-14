@@ -18,8 +18,14 @@ function showLoggedInState(user) {
     document.getElementById('user-email').textContent = user.email || '';
     document.getElementById('user-info').classList.add('show');
 
-    document.getElementById('auth-section').innerHTML =
-        '<button class="auth-button logout" onclick="logout()">Logout</button>';
+    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
+
+    // Add admin link if user has admin role
+    if (user.roles && user.roles.includes('admin')) {
+        authButtons = '<a href="/admin" class="auth-button" style="margin-right: 0.5rem; text-decoration: none;">Admin</a>' + authButtons;
+    }
+
+    document.getElementById('auth-section').innerHTML = authButtons;
 }
 
 function showLoggedOutState() {
