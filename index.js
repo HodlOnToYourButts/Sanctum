@@ -65,16 +65,45 @@ app.post('/logout', (req, res) => {
   });
 });
 
-app.get('/user', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({
-      id: req.user._id,
-      email: req.user.email,
-      name: req.user.name,
-      roles: req.user.roles
+app.get('/user', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    // For the user endpoint, optionally fetch fresh data based on query param
+    const fetchFresh = req.query.fresh === 'true';
+
+    if (fetchFresh) {
+      const { fetchOIDCUserInfo, extractRoles } = require('./lib/auth');
+      const freshUserInfo = await fetchOIDCUserInfo(req.user.id);
+      const currentRoles = extractRoles(freshUserInfo);
+
+      res.json({
+        id: req.user.id,
+        email: freshUserInfo.email,
+        name: freshUserInfo.name || freshUserInfo.preferred_username,
+        roles: currentRoles,
+        lastUpdated: new Date().toISOString(),
+        source: 'oidc'
+      });
+    } else {
+      // Return session data for basic operations
+      res.json({
+        id: req.user.id,
+        email: req.user.email,
+        name: req.user.name,
+        roles: ['user'], // Basic role from session
+        lastUpdated: req.user.loginTime,
+        source: 'session'
+      });
+    }
+  } catch (error) {
+    logger.error('Failed to fetch user data', {
+      userId: req.user.id,
+      error: error.message
     });
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.status(500).json({ error: 'Failed to fetch user data' });
   }
 });
 
