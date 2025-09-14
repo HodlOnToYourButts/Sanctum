@@ -21,28 +21,93 @@
             justify-content: center;
         }
 
-        .container {
-            text-align: center;
-            padding: 3rem;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            max-width: 500px;
-            width: 90%;
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
         }
 
         .logo {
-            font-size: 3rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: #4f46e5;
-            margin-bottom: 1rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-item {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
         }
 
         .subtitle {
             color: #6b7280;
-            font-size: 1.2rem;
+            font-size: 1rem;
             margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1rem;
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .sort-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
         }
 
         .user-info {
@@ -120,11 +185,129 @@
         .features li {
             margin-bottom: 0.5rem;
         }
+
+        .content-feed {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .content-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .content-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-header-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .content-body {
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .content-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vote-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s;
+        }
+
+        .vote-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .vote-btn.upvoted {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .vote-btn.downvoted {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .vote-score {
+            font-weight: 600;
+            min-width: 2rem;
+            text-align: center;
+        }
+
+        .content-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">Sanctum</div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item active" data-type="all">All</a>
+                    <a href="#" class="nav-item" data-type="blog">Blogs</a>
+                </nav>
+            </div>
+            <div id="auth-section">
+                <div id="loading" class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
-        <div class="logo">Sanctum</div>
         <div class="subtitle">Distributed Content Management System</div>
 
         <div id="user-info" class="user-info">
@@ -132,19 +315,16 @@
             <div id="user-email" class="user-email"></div>
         </div>
 
-        <div id="auth-section">
-            <div id="loading" class="loading">Loading...</div>
+        <div class="content-header">
+            <h2 id="content-type-title">All Content</h2>
+            <div class="sort-options">
+                <button class="sort-btn active" data-sort="new">New</button>
+                <button class="sort-btn" data-sort="top">Top</button>
+            </div>
         </div>
 
-        <div class="features">
-            <h3>Features</h3>
-            <ul>
-                <li>Distributed content management with CouchDB</li>
-                <li>Secure OIDC authentication</li>
-                <li>RESTful API for content operations</li>
-                <li>Multi-instance deployment support</li>
-            </ul>
-        </div>
+        <div id="content-loading" class="loading">Loading content...</div>
+        <div id="content-feed" class="content-feed"></div>
     </div>
 
     <script src="/app.js"></script>

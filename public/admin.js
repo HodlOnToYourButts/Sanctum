@@ -119,7 +119,8 @@ async function createContent(formData) {
         const contentData = {
             type: formData.get('type'),
             title: formData.get('title'),
-            body: formData.get('body')
+            body: formData.get('body'),
+            promotable: formData.get('promotable') === 'on'
         };
 
         if (contentData.type === 'blog' && formData.get('tags')) {
@@ -220,9 +221,13 @@ document.getElementById('content-form').addEventListener('submit', async (e) => 
 
 document.getElementById('content-type').addEventListener('change', (e) => {
     const tagsGroup = document.getElementById('tags-group');
+    const promotableCheckbox = document.getElementById('content-promotable');
+
     if (e.target.value === 'blog') {
         tagsGroup.style.display = 'block';
+        promotableCheckbox.checked = true; // Blogs default to promotable
     } else {
         tagsGroup.style.display = 'none';
+        promotableCheckbox.checked = false; // Pages default to not promotable
     }
 });

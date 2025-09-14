@@ -21,7 +21,8 @@ const pageSchema = Joi.object({
   type: Joi.string().valid('page').required(),
   title: Joi.string().required(),
   body: Joi.string().required(),
-  status: Joi.string().valid('draft', 'published', 'archived').default('published')
+  status: Joi.string().valid('draft', 'published', 'archived').default('published'),
+  promotable: Joi.boolean().default(false)
 });
 
 const blogSchema = Joi.object({
@@ -30,7 +31,8 @@ const blogSchema = Joi.object({
   body: Joi.string().required(),
   tags: Joi.array().items(Joi.string()).default([]),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
-  allow_comments: Joi.boolean().default(true)
+  allow_comments: Joi.boolean().default(true),
+  promotable: Joi.boolean().default(true) // Blogs are promotable by default
 });
 
 const contentSchema = Joi.alternatives().try(pageSchema, blogSchema);
@@ -122,7 +124,13 @@ router.post('/', requireAuth, async (req, res) => {
         email: req.user.email
       },
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      votes: {
+        up: 0,
+        down: 0,
+        score: 0
+      },
+      voter_list: [] // Track who voted to prevent duplicate votes
     };
 
     const result = await db.insert(content);
@@ -364,6 +372,144 @@ router.put('/:id/comments/:commentId', requireRole('admin'), async (req, res) =>
       logger.error('Error moderating comment', { error: error.message });
       res.status(500).json({ error: 'Failed to moderate comment' });
     }
+  }
+});
+
+// Voting system
+router.post('/:id/vote', requireAuth, async (req, res) => {
+  try {
+    const { vote } = req.body; // 'up', 'down', or 'remove'
+
+    if (!['up', 'down', 'remove'].includes(vote)) {
+      return res.status(400).json({ error: 'Invalid vote type' });
+    }
+
+    await database.connect();
+    const db = database.getDb();
+    const content = await db.get(req.params.id);
+
+    if (!content.type || !['page', 'blog'].includes(content.type)) {
+      return res.status(404).json({ error: 'Content not found' });
+    }
+
+    // Initialize voting fields if they don't exist
+    if (!content.votes) {
+      content.votes = { up: 0, down: 0, score: 0 };
+    }
+    if (!content.voter_list) {
+      content.voter_list = [];
+    }
+
+    const userId = req.user.id;
+    const existingVote = content.voter_list.find(v => v.user_id === userId);
+
+    // Remove existing vote if any
+    if (existingVote) {
+      if (existingVote.type === 'up') {
+        content.votes.up--;
+      } else if (existingVote.type === 'down') {
+        content.votes.down--;
+      }
+      content.voter_list = content.voter_list.filter(v => v.user_id !== userId);
+    }
+
+    // Add new vote if not removing
+    if (vote !== 'remove') {
+      content.voter_list.push({
+        user_id: userId,
+        type: vote,
+        timestamp: new Date().toISOString()
+      });
+
+      if (vote === 'up') {
+        content.votes.up++;
+      } else if (vote === 'down') {
+        content.votes.down++;
+      }
+    }
+
+    // Calculate score
+    content.votes.score = content.votes.up - content.votes.down;
+    content.updated_at = new Date().toISOString();
+
+    await db.insert(content);
+
+    res.json({
+      votes: content.votes,
+      userVote: vote === 'remove' ? null : vote
+    });
+
+    logger.info('Content voted', {
+      contentId: req.params.id,
+      userId: req.user.id,
+      voteType: vote,
+      newScore: content.votes.score
+    });
+
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error voting on content', { error: error.message });
+      res.status(500).json({ error: 'Failed to vote' });
+    }
+  }
+});
+
+// Get homepage feed with promotable content
+router.get('/feed', async (req, res) => {
+  try {
+    await database.connect();
+    const db = database.getDb();
+    const { type, sort = 'new', limit = 20, skip = 0 } = req.query;
+
+    // Build selector for promotable content
+    const selector = {
+      status: 'published',
+      promotable: true
+    };
+
+    if (type && type !== 'all') {
+      selector.type = type;
+    } else {
+      selector.$or = [
+        { type: 'blog' },
+        { type: 'page', promotable: true }
+      ];
+    }
+
+    const result = await db.find({
+      selector,
+      limit: parseInt(limit),
+      skip: parseInt(skip)
+    });
+
+    let items = result.docs.map(doc => ({
+      _id: doc._id,
+      type: doc.type,
+      title: doc.title,
+      body: doc.body.substring(0, 300) + (doc.body.length > 300 ? '...' : ''),
+      created_at: doc.created_at,
+      updated_at: doc.updated_at,
+      author_name: doc.author?.name,
+      author_id: doc.author?.id,
+      tags: doc.tags || [],
+      votes: doc.votes || { up: 0, down: 0, score: 0 },
+      allow_comments: doc.allow_comments
+    }));
+
+    // Sort items
+    if (sort === 'top') {
+      items.sort((a, b) => b.votes.score - a.votes.score);
+    } else {
+      // Sort by newest first (created_at)
+      items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    res.json(items);
+  } catch (error) {
+    logger.error('Error fetching content feed', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch content feed' });
   }
 });
 
