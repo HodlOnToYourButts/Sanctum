@@ -463,40 +463,51 @@ router.get('/feed', async (req, res) => {
     const db = database.getDb();
     const { type, sort = 'new', limit = 20, skip = 0 } = req.query;
 
-    // Build selector for promotable content
+    // Simplified selector - just get all content and filter in JavaScript
     const selector = {
-      status: 'published',
-      promotable: true
+      $or: [
+        { type: 'page' },
+        { type: 'blog' }
+      ]
     };
-
-    if (type && type !== 'all') {
-      selector.type = type;
-    } else {
-      selector.$or = [
-        { type: 'blog' },
-        { type: 'page', promotable: true }
-      ];
-    }
 
     const result = await db.find({
       selector,
-      limit: parseInt(limit),
-      skip: parseInt(skip)
+      limit: 100 // Get more docs to filter from
     });
 
-    let items = result.docs.map(doc => ({
-      _id: doc._id,
-      type: doc.type,
-      title: doc.title,
-      body: doc.body.substring(0, 300) + (doc.body.length > 300 ? '...' : ''),
-      created_at: doc.created_at,
-      updated_at: doc.updated_at,
-      author_name: doc.author?.name,
-      author_id: doc.author?.id,
-      tags: doc.tags || [],
-      votes: doc.votes || { up: 0, down: 0, score: 0 },
-      allow_comments: doc.allow_comments
-    }));
+    // Filter and process results
+    let items = result.docs
+      .filter(doc => {
+        // Only include published content
+        if (doc.status !== 'published') return false;
+
+        // Only include promotable content (blogs are promotable by default)
+        if (doc.type === 'blog') return doc.promotable !== false;
+        if (doc.type === 'page') return doc.promotable === true;
+
+        return false;
+      })
+      .filter(doc => {
+        // Filter by type if specified
+        if (type && type !== 'all') {
+          return doc.type === type;
+        }
+        return true;
+      })
+      .map(doc => ({
+        _id: doc._id,
+        type: doc.type,
+        title: doc.title,
+        body: doc.body ? (doc.body.substring(0, 300) + (doc.body.length > 300 ? '...' : '')) : '',
+        created_at: doc.created_at,
+        updated_at: doc.updated_at,
+        author_name: doc.author?.name,
+        author_id: doc.author?.id,
+        tags: doc.tags || [],
+        votes: doc.votes || { up: 0, down: 0, score: 0 },
+        allow_comments: doc.allow_comments
+      }));
 
     // Sort items
     if (sort === 'top') {
@@ -506,10 +517,19 @@ router.get('/feed', async (req, res) => {
       items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
+    // Apply limit and skip
+    items = items.slice(parseInt(skip), parseInt(skip) + parseInt(limit));
+
     res.json(items);
   } catch (error) {
-    logger.error('Error fetching content feed', { error: error.message });
-    res.status(500).json({ error: 'Failed to fetch content feed' });
+    logger.error('Error fetching content feed', {
+      error: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({
+      error: 'Failed to fetch content feed',
+      details: error.message
+    });
   }
 });
 
