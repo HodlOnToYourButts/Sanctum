@@ -76,7 +76,7 @@ app.get('/user', async (req, res) => {
 
     if (fetchFresh) {
       const { fetchOIDCUserInfo, extractRoles } = require('./lib/auth');
-      const freshUserInfo = await fetchOIDCUserInfo(req.user.id);
+      const freshUserInfo = await fetchOIDCUserInfo(req.user);
       const currentRoles = extractRoles(freshUserInfo);
 
       res.json({
