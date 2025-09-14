@@ -17,46 +17,67 @@ const logger = winston.createLogger({
 
 const router = express.Router();
 
-const contentSchema = Joi.object({
+const pageSchema = Joi.object({
+  type: Joi.string().valid('page').required(),
   title: Joi.string().required(),
-  content: Joi.string().required(),
-  status: Joi.string().valid('draft', 'published', 'archived').default('draft'),
-  tags: Joi.array().items(Joi.string()).default([]),
-  metadata: Joi.object().default({})
+  body: Joi.string().required(),
+  status: Joi.string().valid('draft', 'published', 'archived').default('published')
 });
+
+const blogSchema = Joi.object({
+  type: Joi.string().valid('blog').required(),
+  title: Joi.string().required(),
+  body: Joi.string().required(),
+  tags: Joi.array().items(Joi.string()).default([]),
+  status: Joi.string().valid('draft', 'published', 'archived').default('published'),
+  allow_comments: Joi.boolean().default(true)
+});
+
+const contentSchema = Joi.alternatives().try(pageSchema, blogSchema);
 
 router.get('/', async (req, res) => {
   try {
     const db = database.getDb();
-    const { type = 'page', status, limit = 20, skip = 0 } = req.query;
+    const { type, status, limit = 20, skip = 0 } = req.query;
 
-    let key = type;
-    if (status) {
-      key = [status];
+    // Use Mango query instead of views for simplicity
+    const selector = {
+      $or: [
+        { type: 'page' },
+        { type: 'blog' }
+      ]
+    };
+
+    if (type) {
+      selector.$or = [{ type: type }];
     }
 
-    const viewName = status ? 'by_status' : 'by_type';
-    const result = await db.view('content', viewName, {
-      key,
-      include_docs: true,
+    if (status) {
+      selector.status = status;
+    }
+
+    const result = await db.find({
+      selector,
       limit: parseInt(limit),
       skip: parseInt(skip),
-      descending: true
+      sort: [{ 'created_at': 'desc' }]
     });
 
-    res.json({
-      items: result.rows.map(row => ({
-        id: row.doc._id,
-        title: row.doc.title,
-        status: row.doc.status,
-        created_at: row.doc.created_at,
-        updated_at: row.doc.updated_at,
-        author: row.doc.author,
-        tags: row.doc.tags
-      })),
-      total: result.total_rows,
-      offset: result.offset
-    });
+    const items = result.docs.map(doc => ({
+      _id: doc._id,
+      type: doc.type,
+      title: doc.title,
+      body: doc.body,
+      status: doc.status,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at,
+      author_name: doc.author?.name,
+      author_id: doc.author?.id,
+      tags: doc.tags || [],
+      allow_comments: doc.allow_comments
+    }));
+
+    res.json(items);
   } catch (error) {
     logger.error('Error fetching content', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch content' });
@@ -92,10 +113,9 @@ router.post('/', requireAuth, async (req, res) => {
 
     const db = database.getDb();
     const content = {
-      type: 'page',
       ...value,
       author: {
-        id: req.user._id,
+        id: req.user.id,
         name: req.user.name,
         email: req.user.email
       },
@@ -109,8 +129,9 @@ router.post('/', requireAuth, async (req, res) => {
 
     logger.info('Content created', {
       contentId: content._id,
-      authorId: req.user._id,
-      title: content.title
+      authorId: req.user.id,
+      title: content.title,
+      type: content.type
     });
 
     res.status(201).json(content);
@@ -134,7 +155,7 @@ router.put('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
-    if (existingContent.author.id !== req.user._id && !req.user.roles.includes('admin')) {
+    if (existingContent.author.id !== req.user.id && !(req.user.currentRoles && req.user.currentRoles.includes('admin'))) {
       return res.status(403).json({ error: 'Cannot edit content by another author' });
     }
 
@@ -149,7 +170,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 
     logger.info('Content updated', {
       contentId: updatedContent._id,
-      authorId: req.user._id,
+      authorId: req.user.id,
       title: updatedContent.title
     });
 
@@ -173,7 +194,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
-    if (content.author.id !== req.user._id && !req.user.roles.includes('admin')) {
+    if (content.author.id !== req.user.id && !(req.user.currentRoles && req.user.currentRoles.includes('admin'))) {
       return res.status(403).json({ error: 'Cannot delete content by another author' });
     }
 
@@ -181,7 +202,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
     logger.info('Content deleted', {
       contentId: req.params.id,
-      authorId: req.user._id,
+      authorId: req.user.id,
       title: content.title
     });
 
@@ -192,6 +213,154 @@ router.delete('/:id', requireAuth, async (req, res) => {
     } else {
       logger.error('Error deleting content', { id: req.params.id, error: error.message });
       res.status(500).json({ error: 'Failed to delete content' });
+    }
+  }
+});
+
+// Comment system for blogs
+const commentSchema = Joi.object({
+  content: Joi.string().required().min(1).max(1000),
+  author_name: Joi.string().required().min(1).max(100),
+  author_email: Joi.string().email().optional()
+});
+
+// Get comments for a specific blog post
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const db = database.getDb();
+
+    // First check if the content exists and is a blog
+    const content = await db.get(req.params.id);
+    if (content.type !== 'blog') {
+      return res.status(400).json({ error: 'Comments only available for blog posts' });
+    }
+
+    if (!content.allow_comments) {
+      return res.status(403).json({ error: 'Comments are disabled for this post' });
+    }
+
+    // Find comments for this content
+    const result = await db.find({
+      selector: {
+        type: 'comment',
+        content_id: req.params.id
+      },
+      sort: [{ 'created_at': 'asc' }]
+    });
+
+    const comments = result.docs.map(doc => ({
+      _id: doc._id,
+      content: doc.content,
+      author_name: doc.author_name,
+      created_at: doc.created_at,
+      status: doc.status
+    }));
+
+    res.json(comments);
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error fetching comments', { id: req.params.id, error: error.message });
+      res.status(500).json({ error: 'Failed to fetch comments' });
+    }
+  }
+});
+
+// Add a comment to a blog post
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { error, value } = commentSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const db = database.getDb();
+
+    // Check if the content exists and is a blog
+    const content = await db.get(req.params.id);
+    if (content.type !== 'blog') {
+      return res.status(400).json({ error: 'Comments only available for blog posts' });
+    }
+
+    if (!content.allow_comments) {
+      return res.status(403).json({ error: 'Comments are disabled for this post' });
+    }
+
+    const comment = {
+      type: 'comment',
+      content_id: req.params.id,
+      content: value.content,
+      author_name: value.author_name,
+      author_email: value.author_email,
+      status: 'pending', // Comments start as pending moderation
+      created_at: new Date().toISOString(),
+      ip_address: req.ip || req.connection.remoteAddress
+    };
+
+    const result = await db.insert(comment);
+    comment._id = result.id;
+    comment._rev = result.rev;
+
+    logger.info('Comment created', {
+      commentId: comment._id,
+      contentId: req.params.id,
+      authorName: comment.author_name
+    });
+
+    res.status(201).json({
+      _id: comment._id,
+      content: comment.content,
+      author_name: comment.author_name,
+      created_at: comment.created_at,
+      status: comment.status
+    });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error creating comment', { error: error.message });
+      res.status(500).json({ error: 'Failed to create comment' });
+    }
+  }
+});
+
+// Moderate comments (admin only)
+router.put('/:id/comments/:commentId', requireRole('admin'), async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be approved, rejected, or pending' });
+    }
+
+    const db = database.getDb();
+    const comment = await db.get(req.params.commentId);
+
+    if (comment.type !== 'comment' || comment.content_id !== req.params.id) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    comment.status = status;
+    comment.moderated_at = new Date().toISOString();
+    comment.moderated_by = req.user.id;
+
+    const result = await db.insert(comment);
+    comment._rev = result.rev;
+
+    logger.info('Comment moderated', {
+      commentId: comment._id,
+      status: status,
+      moderatorId: req.user.id
+    });
+
+    res.json({ message: 'Comment status updated successfully' });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Comment not found' });
+    } else {
+      logger.error('Error moderating comment', { error: error.message });
+      res.status(500).json({ error: 'Failed to moderate comment' });
     }
   }
 });

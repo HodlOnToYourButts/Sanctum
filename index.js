@@ -107,6 +107,86 @@ app.get('/user', async (req, res) => {
   }
 });
 
+// Site settings API
+app.get('/api/settings', async (req, res) => {
+  try {
+    await database.connect();
+    const db = database.getDb();
+
+    try {
+      const settings = await db.get('site_settings');
+      res.json({
+        name: settings.name || 'Sanctum CMS',
+        description: settings.description || '',
+        updated_at: settings.updated_at
+      });
+    } catch (error) {
+      if (error.statusCode === 404) {
+        // Default settings if none exist
+        res.json({
+          name: 'Sanctum CMS',
+          description: '',
+          updated_at: null
+        });
+      } else {
+        throw error;
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to fetch site settings', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch site settings' });
+  }
+});
+
+app.put('/api/settings', async (req, res) => {
+  const { requireRole } = require('./lib/auth');
+
+  // Check admin role
+  await requireRole('admin')(req, res, async () => {
+    try {
+      const { name, description } = req.body;
+
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return res.status(400).json({ error: 'Site name is required' });
+      }
+
+      await database.connect();
+      const db = database.getDb();
+
+      let settings = {
+        _id: 'site_settings',
+        type: 'settings',
+        name: name.trim(),
+        description: description ? description.trim() : '',
+        updated_at: new Date().toISOString(),
+        updated_by: req.user.id
+      };
+
+      try {
+        const existing = await db.get('site_settings');
+        settings._rev = existing._rev;
+      } catch (error) {
+        // Document doesn't exist, will create new one
+      }
+
+      await db.insert(settings);
+
+      logger.info('Site settings updated', {
+        userId: req.user.id,
+        siteName: settings.name
+      });
+
+      res.json({ message: 'Settings updated successfully' });
+    } catch (error) {
+      logger.error('Failed to update site settings', {
+        userId: req.user.id,
+        error: error.message
+      });
+      res.status(500).json({ error: 'Failed to update site settings' });
+    }
+  });
+});
+
 app.use('/api/content', contentRoutes);
 
 app.get('/health', async (req, res) => {
@@ -121,6 +201,10 @@ app.get('/health', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(__dirname + '/public/admin.html');
 });
 
 app.get('/api', (req, res) => {
