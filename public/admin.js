@@ -3,14 +3,16 @@ let currentUser = null;
 
 async function checkAdminAuth() {
     try {
-        const response = await fetch('/user?fresh=true');
+        const response = await fetch('/user');
         if (!response.ok) {
             throw new Error('Not authenticated');
         }
 
         const user = await response.json();
+        console.log('User data:', user); // Debug log
+
         if (!user.roles.includes('admin')) {
-            throw new Error('Insufficient privileges');
+            throw new Error(`Insufficient privileges. Current roles: ${user.roles.join(', ')}`);
         }
 
         currentUser = user;

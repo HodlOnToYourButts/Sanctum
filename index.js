@@ -71,11 +71,10 @@ app.get('/user', async (req, res) => {
   }
 
   try {
-    // For the user endpoint, optionally fetch fresh data based on query param
-    const fetchFresh = req.query.fresh === 'true';
+    // Always try to fetch fresh data from OIDC first, fallback to session
+    const { fetchOIDCUserInfo, extractRoles } = require('./lib/auth');
 
-    if (fetchFresh) {
-      const { fetchOIDCUserInfo, extractRoles } = require('./lib/auth');
+    try {
       const freshUserInfo = await fetchOIDCUserInfo(req.user);
       const currentRoles = extractRoles(freshUserInfo);
 
@@ -87,15 +86,20 @@ app.get('/user', async (req, res) => {
         lastUpdated: new Date().toISOString(),
         source: 'oidc'
       });
-    } else {
-      // Return session data for basic operations
+    } catch (oidcError) {
+      logger.warn('Failed to fetch fresh OIDC data, using session data', {
+        userId: req.user.id,
+        error: oidcError.message
+      });
+
+      // Fallback to session data if OIDC fails
       res.json({
         id: req.user.id,
         email: req.user.email,
         name: req.user.name,
-        roles: ['user'], // Basic role from session
+        roles: ['user'], // Fallback role
         lastUpdated: req.user.loginTime,
-        source: 'session'
+        source: 'session_fallback'
       });
     }
   } catch (error) {
