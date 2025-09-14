@@ -70,13 +70,16 @@ async function loadContent() {
     try {
         const response = await fetch('/api/content');
         if (!response.ok) {
-            throw new Error('Failed to load content');
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
         const content = await response.json();
+        console.log('Loaded content:', content); // Debug log
         displayContent(content);
         document.getElementById('content-loading').style.display = 'none';
     } catch (error) {
+        console.error('Content loading error:', error);
         document.getElementById('content-loading').innerHTML =
             `<div class="error">Failed to load content: ${error.message}</div>`;
     }

@@ -41,5 +41,21 @@ async function logout() {
     }
 }
 
+async function loadSiteSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+            const settings = await response.json();
+            document.querySelector('.logo').textContent = settings.name || 'Sanctum';
+            document.querySelector('.subtitle').textContent = settings.description || 'Distributed Content Management System';
+        }
+    } catch (error) {
+        console.error('Failed to load site settings:', error);
+    }
+}
+
 // Check authentication status on page load
-document.addEventListener('DOMContentLoaded', checkAuth);
+document.addEventListener('DOMContentLoaded', () => {
+    loadSiteSettings();
+    checkAuth();
+});

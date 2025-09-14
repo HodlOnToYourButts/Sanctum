@@ -37,6 +37,7 @@ const contentSchema = Joi.alternatives().try(pageSchema, blogSchema);
 
 router.get('/', async (req, res) => {
   try {
+    await database.connect(); // Ensure database connection
     const db = database.getDb();
     const { type, status, limit = 20, skip = 0 } = req.query;
 
@@ -111,6 +112,7 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
+    await database.connect(); // Ensure database connection
     const db = database.getDb();
     const content = {
       ...value,
