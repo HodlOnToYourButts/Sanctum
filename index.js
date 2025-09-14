@@ -41,6 +41,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(express.static('public'));
+
 app.use('/auth', authRoutes);
 app.use('/api/content', contentRoutes);
 
@@ -55,6 +57,10 @@ app.get('/health', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+
+app.get('/api', (req, res) => {
   res.json({
     message: 'Sanctum API',
     version: '0.1.0',

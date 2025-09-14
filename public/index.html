@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanctum CMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-info {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .user-info.show {
+            display: block;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-email {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .auth-button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 160px;
+        }
+
+        .auth-button:hover {
+            background: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .auth-button.logout {
+            background: #dc2626;
+        }
+
+        .auth-button.logout:hover {
+            background: #b91c1c;
+        }
+
+        .loading {
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .features {
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .features h3 {
+            color: #374151;
+            margin-bottom: 1rem;
+        }
+
+        .features ul {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .features li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Sanctum</div>
+        <div class="subtitle">Distributed Content Management System</div>
+
+        <div id="user-info" class="user-info">
+            <div id="user-name" class="user-name"></div>
+            <div id="user-email" class="user-email"></div>
+        </div>
+
+        <div id="auth-section">
+            <div id="loading" class="loading">Loading...</div>
+        </div>
+
+        <div class="features">
+            <h3>Features</h3>
+            <ul>
+                <li>Distributed content management with CouchDB</li>
+                <li>Secure OIDC authentication</li>
+                <li>RESTful API for content operations</li>
+                <li>Multi-instance deployment support</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            try {
+                const response = await fetch('/auth/user');
+                if (response.ok) {
+                    const user = await response.json();
+                    showLoggedInState(user);
+                } else {
+                    showLoggedOutState();
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                showLoggedOutState();
+            }
+        }
+
+        function showLoggedInState(user) {
+            document.getElementById('user-name').textContent = user.name || 'User';
+            document.getElementById('user-email').textContent = user.email || '';
+            document.getElementById('user-info').classList.add('show');
+
+            document.getElementById('auth-section').innerHTML =
+                '<button class="auth-button logout" onclick="logout()">Logout</button>';
+        }
+
+        function showLoggedOutState() {
+            document.getElementById('user-info').classList.remove('show');
+            document.getElementById('auth-section').innerHTML =
+                '<a href="/auth/login" class="auth-button">Login / Sign Up</a>';
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/auth/logout', { method: 'POST' });
+                if (response.ok) {
+                    showLoggedOutState();
+                } else {
+                    console.error('Logout failed');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Check authentication status on page load
+        checkAuth();
+    </script>
+</body>
+</html>
