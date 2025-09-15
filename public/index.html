@@ -179,6 +179,22 @@
             margin: 0;
         }
 
+        .user-auth-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info-header {
+            display: none;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .user-info-header.show {
+            display: block;
+        }
+
         .loading {
             color: #6b7280;
             font-style: italic;
@@ -308,6 +324,88 @@
             font-size: 0.75rem;
         }
 
+        .comment-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .comment-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .comments-section {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 1rem;
+            padding-top: 1rem;
+        }
+
+        .comment-form {
+            margin-bottom: 1rem;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn-comment {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-comment:hover {
+            background: #3730a3;
+        }
+
+        .comment {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 0.75rem 0;
+        }
+
+        .comment:last-child {
+            border-bottom: none;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-date {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .comment-content {
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .no-comments {
+            color: #6b7280;
+            font-style: italic;
+            text-align: center;
+            padding: 1rem;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -352,20 +450,18 @@
                     <a href="#" class="nav-item" data-type="blog">Blogs</a>
                 </nav>
             </div>
-            <div id="auth-section">
-                <div id="loading" class="loading">Loading...</div>
+            <div class="user-auth-section">
+                <div id="user-info" class="user-info-header">
+                    <span id="user-name-header"></span>
+                </div>
+                <div id="auth-section">
+                    <div id="loading" class="loading">Loading...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="subtitle">Distributed Content Management System</div>
-
-        <div id="user-info" class="user-info">
-            <div id="user-name" class="user-name"></div>
-            <div id="user-email" class="user-email"></div>
-        </div>
-
         <div class="content-header">
             <h2 id="content-type-title">All Content</h2>
             <div class="sort-options">

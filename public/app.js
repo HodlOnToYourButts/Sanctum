@@ -15,8 +15,7 @@ async function checkAuth() {
 
 function showLoggedInState(user) {
     currentUser = user; // Store globally for voting
-    document.getElementById('user-name').textContent = user.name || 'User';
-    document.getElementById('user-email').textContent = user.email || '';
+    document.getElementById('user-name-header').textContent = user.name || 'User';
     document.getElementById('user-info').classList.add('show');
 
     let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
@@ -123,14 +122,34 @@ function displayContentFeed(contentList) {
                             ↓ ${item.votes.down}
                         </button>
                     </div>
-                    <div>
-                        ${item.allow_comments ? `<span>${item.comment_count || 0} comments</span>` : ''}
+                    <div class="comment-actions">
+                        ${item.allow_comments && item.type === 'blog' ? `
+                            <button class="comment-btn" onclick="toggleComments('${item._id}')">
+                                💬 ${item.comment_count || 0} comments
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
+                ${item.allow_comments && item.type === 'blog' ? `
+                    <div id="comments-${item._id}" class="comments-section" style="display: none;">
+                        <div class="comment-form">
+                            ${currentUser ? `
+                                <textarea id="comment-text-${item._id}" placeholder="Add a comment..." rows="3"></textarea>
+                                <button onclick="submitComment('${item._id}')" class="btn-comment">Comment</button>
+                            ` : '<p>Login to leave a comment</p>'}
+                        </div>
+                        <div id="comments-list-${item._id}" class="comments-list">
+                            Loading comments...
+                        </div>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');
 }
+
+// Track user votes locally for undo functionality
+let userVotes = {};
 
 async function vote(contentId, voteType) {
     if (!currentUser) {
@@ -139,12 +158,16 @@ async function vote(contentId, voteType) {
     }
 
     try {
+        // Check if user already voted this way - if so, remove vote
+        const currentVote = userVotes[contentId];
+        const actualVote = (currentVote === voteType) ? 'remove' : voteType;
+
         const response = await fetch(`/api/content/${contentId}/vote`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ vote: voteType })
+            body: JSON.stringify({ vote: actualVote })
         });
 
         if (!response.ok) {
@@ -152,6 +175,14 @@ async function vote(contentId, voteType) {
         }
 
         const result = await response.json();
+
+        // Update local vote tracking
+        if (actualVote === 'remove') {
+            delete userVotes[contentId];
+        } else {
+            userVotes[contentId] = actualVote;
+        }
+
         // Reload content to update vote counts
         loadContentFeed();
     } catch (error) {
@@ -161,8 +192,7 @@ async function vote(contentId, voteType) {
 }
 
 function getUserVote(contentId) {
-    // TODO: Implement user vote tracking
-    return null;
+    return userVotes[contentId] || null;
 }
 
 function setContentType(type) {
@@ -201,6 +231,89 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+async function toggleComments(contentId) {
+    const commentsSection = document.getElementById(`comments-${contentId}`);
+    if (commentsSection.style.display === 'none') {
+        commentsSection.style.display = 'block';
+        await loadComments(contentId);
+    } else {
+        commentsSection.style.display = 'none';
+    }
+}
+
+async function loadComments(contentId) {
+    try {
+        const response = await fetch(`/api/content/${contentId}/comments`);
+        if (!response.ok) {
+            throw new Error('Failed to load comments');
+        }
+
+        const comments = await response.json();
+        const commentsList = document.getElementById(`comments-list-${contentId}`);
+
+        if (comments.length === 0) {
+            commentsList.innerHTML = '<p class="no-comments">No comments yet. Be the first to comment!</p>';
+            return;
+        }
+
+        commentsList.innerHTML = comments.map(comment => `
+            <div class="comment">
+                <div class="comment-header">
+                    <strong>${escapeHtml(comment.author_name)}</strong>
+                    <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+                </div>
+                <div class="comment-content">${escapeHtml(comment.content)}</div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        document.getElementById(`comments-list-${contentId}`).innerHTML =
+            '<p class="error">Failed to load comments.</p>';
+    }
+}
+
+async function submitComment(contentId) {
+    if (!currentUser) {
+        alert('Please login to comment');
+        return;
+    }
+
+    const textarea = document.getElementById(`comment-text-${contentId}`);
+    const content = textarea.value.trim();
+
+    if (!content) {
+        alert('Please enter a comment');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/content/${contentId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content,
+                author_name: currentUser.name,
+                author_email: currentUser.email
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to submit comment');
+        }
+
+        textarea.value = '';
+        await loadComments(contentId);
+
+        // Reload content feed to update comment count
+        loadContentFeed();
+    } catch (error) {
+        console.error('Error submitting comment:', error);
+        alert('Failed to submit comment. Please try again.');
+    }
 }
 
 // Check authentication status on page load
