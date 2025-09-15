@@ -108,7 +108,7 @@ function displayContent(contentList) {
             <div class="content-actions">
                 <button class="btn" onclick="editContent('${item._id}')">Edit</button>
                 <button class="btn btn-danger" onclick="deleteContent('${item._id}')">Delete</button>
-                ${['blog', 'article', 'forum'].includes(item.type) ? `<button class="btn btn-secondary" onclick="viewComments('${item._id}')">Comments</button>` : ''}
+                ${['blog', 'forum'].includes(item.type) ? `<button class="btn btn-secondary" onclick="viewComments('${item._id}')">Comments</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -120,10 +120,10 @@ async function createContent(formData) {
             type: formData.get('type'),
             title: formData.get('title'),
             body: formData.get('body'),
-            promotable: formData.get('promotable') === 'on'
+            promoted: formData.get('promoted') === 'on'
         };
 
-        if (['blog', 'article', 'forum'].includes(contentData.type) && formData.get('tags')) {
+        if (['blog', 'forum'].includes(contentData.type) && formData.get('tags')) {
             contentData.tags = formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag);
         }
 
@@ -221,13 +221,13 @@ document.getElementById('content-form').addEventListener('submit', async (e) => 
 
 document.getElementById('content-type').addEventListener('change', (e) => {
     const tagsGroup = document.getElementById('tags-group');
-    const promotableCheckbox = document.getElementById('content-promotable');
+    const promotedCheckbox = document.getElementById('content-promoted');
 
-    if (['blog', 'article', 'forum'].includes(e.target.value)) {
+    if (['blog', 'forum'].includes(e.target.value)) {
         tagsGroup.style.display = 'block';
-        promotableCheckbox.checked = true; // Blogs, articles, forum posts default to promotable
+        promotedCheckbox.checked = false; // All content defaults to not promoted
     } else {
         tagsGroup.style.display = 'none';
-        promotableCheckbox.checked = false; // Pages default to not promotable
+        promotedCheckbox.checked = false; // All content defaults to not promoted
     }
 });

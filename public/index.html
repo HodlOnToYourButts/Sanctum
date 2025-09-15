@@ -51,6 +51,14 @@
             font-size: 1.8rem;
             font-weight: 700;
             color: #4f46e5;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .logo:hover {
+            color: #3730a3;
         }
 
         .nav-menu {
@@ -444,12 +452,10 @@
     <div class="header">
         <div class="header-content">
             <div class="header-left">
-                <div class="logo">Sanctum</div>
+                <button class="logo" onclick="window.location.href='/'">Sanctum</button>
                 <nav class="nav-menu">
-                    <a href="#" class="nav-item active" data-type="all">All</a>
-                    <a href="#" class="nav-item" data-type="blog">Blogs</a>
-                    <a href="#" class="nav-item" data-type="article">Articles</a>
-                    <a href="#" class="nav-item" data-type="forum">Forum</a>
+                    <a href="#" class="nav-item active" data-type="blog">Blogs</a>
+                    <a href="#" class="nav-item" data-type="forum">Forums</a>
                 </nav>
             </div>
             <div class="user-auth-section">
@@ -465,7 +471,7 @@
 
     <div class="container">
         <div class="content-header">
-            <h2 id="content-type-title">All Content</h2>
+            <h2 id="content-type-title">Blogs</h2>
             <div class="sort-options">
                 <button class="sort-btn active" data-sort="new">New</button>
                 <button class="sort-btn" data-sort="top">Top</button>

@@ -22,7 +22,7 @@ const pageSchema = Joi.object({
   title: Joi.string().required(),
   body: Joi.string().required(),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
-  promotable: Joi.boolean().default(false)
+  promoted: Joi.boolean().default(false)
 });
 
 const blogSchema = Joi.object({
@@ -32,17 +32,7 @@ const blogSchema = Joi.object({
   tags: Joi.array().items(Joi.string()).default([]),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
   allow_comments: Joi.boolean().default(true),
-  promotable: Joi.boolean().default(true) // Blogs are promotable by default
-});
-
-const articleSchema = Joi.object({
-  type: Joi.string().valid('article').required(),
-  title: Joi.string().required(),
-  body: Joi.string().required(),
-  tags: Joi.array().items(Joi.string()).default([]),
-  status: Joi.string().valid('draft', 'published', 'archived').default('published'),
-  allow_comments: Joi.boolean().default(true),
-  promotable: Joi.boolean().default(true) // Articles are promotable by default
+  promoted: Joi.boolean().default(false)
 });
 
 const forumSchema = Joi.object({
@@ -52,10 +42,10 @@ const forumSchema = Joi.object({
   tags: Joi.array().items(Joi.string()).default([]),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
   allow_comments: Joi.boolean().default(true),
-  promotable: Joi.boolean().default(true) // Forum posts are promotable by default
+  promoted: Joi.boolean().default(false)
 });
 
-const contentSchema = Joi.alternatives().try(pageSchema, blogSchema, articleSchema, forumSchema);
+const contentSchema = Joi.alternatives().try(pageSchema, blogSchema, forumSchema);
 
 router.get('/', async (req, res) => {
   try {
@@ -68,7 +58,6 @@ router.get('/', async (req, res) => {
       $or: [
         { type: 'page' },
         { type: 'blog' },
-        { type: 'article' },
         { type: 'forum' }
       ]
     };
@@ -121,7 +110,6 @@ router.get('/feed', async (req, res) => {
       $or: [
         { type: 'page' },
         { type: 'blog' },
-        { type: 'article' },
         { type: 'forum' }
       ]
     };
@@ -137,16 +125,17 @@ router.get('/feed', async (req, res) => {
         // Only include published content
         if (doc.status !== 'published') return false;
 
-        // Only include promotable content (blogs, articles, forum posts are promotable by default)
-        if (doc.type === 'blog' || doc.type === 'article' || doc.type === 'forum') return doc.promotable !== false;
-        if (doc.type === 'page') return doc.promotable === true;
-
-        return false;
+        // Only include promoted content
+        return doc.promoted === true;
       })
       .filter(doc => {
         // Filter by type if specified
         if (type && type !== 'all') {
           return doc.type === type;
+        }
+        // For 'all' tab, only show explicitly promoted content
+        if (type === 'all') {
+          return doc.promoted === true;
         }
         return true;
       })
@@ -161,7 +150,8 @@ router.get('/feed', async (req, res) => {
         author_id: doc.author?.id,
         tags: doc.tags || [],
         votes: doc.votes || { up: 0, down: 0, score: 0 },
-        allow_comments: doc.allow_comments
+        allow_comments: doc.allow_comments,
+        comment_count: 0 // Will be calculated below
       }));
 
     // Sort items
@@ -170,6 +160,25 @@ router.get('/feed', async (req, res) => {
     } else {
       // Sort by newest first (created_at)
       items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    // Calculate comment counts for items that allow comments
+    for (let item of items) {
+      if (item.allow_comments && ['blog', 'forum'].includes(item.type)) {
+        try {
+          const commentResult = await db.find({
+            selector: {
+              type: 'comment',
+              content_id: item._id,
+              status: { $in: ['approved', 'pending'] }
+            }
+          });
+          item.comment_count = commentResult.docs.length;
+        } catch (error) {
+          logger.error('Error counting comments', { contentId: item._id, error: error.message });
+          item.comment_count = 0;
+        }
+      }
     }
 
     // Apply limit and skip
@@ -343,7 +352,7 @@ router.get('/:id/comments', async (req, res) => {
 
     // First check if the content exists and allows comments
     const content = await db.get(req.params.id);
-    if (!['blog', 'article', 'forum'].includes(content.type)) {
+    if (!['blog', 'forum'].includes(content.type)) {
       return res.status(400).json({ error: 'Comments only available for blogs, articles, and forum posts' });
     }
 
@@ -399,7 +408,7 @@ router.post('/:id/comments', async (req, res) => {
 
     // Check if the content exists and allows comments
     const content = await db.get(req.params.id);
-    if (!['blog', 'article', 'forum'].includes(content.type)) {
+    if (!['blog', 'forum'].includes(content.type)) {
       return res.status(400).json({ error: 'Comments only available for blogs, articles, and forum posts' });
     }
 
@@ -498,7 +507,7 @@ router.post('/:id/vote', requireAuth, async (req, res) => {
     const db = database.getDb();
     const content = await db.get(req.params.id);
 
-    if (!content.type || !['page', 'blog', 'article', 'forum'].includes(content.type)) {
+    if (!content.type || !['page', 'blog', 'forum'].includes(content.type)) {
       return res.status(404).json({ error: 'Content not found' });
     }
 

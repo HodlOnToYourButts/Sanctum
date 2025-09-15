@@ -64,7 +64,7 @@ async function loadSiteSettings() {
 }
 
 // Global state
-let currentContentType = 'all';
+let currentContentType = 'blog';
 let currentSort = 'new';
 let currentUser = null;
 
@@ -121,14 +121,14 @@ function displayContentFeed(contentList) {
                         </button>
                     </div>
                     <div class="comment-actions">
-                        ${item.allow_comments && ['blog', 'article', 'forum'].includes(item.type) ? `
+                        ${item.allow_comments && ['blog', 'forum'].includes(item.type) ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
                                 💬 ${item.comment_count || 0} comments
                             </button>
                         ` : ''}
                     </div>
                 </div>
-                ${item.allow_comments && ['blog', 'article', 'forum'].includes(item.type) ? `
+                ${item.allow_comments && ['blog', 'forum'].includes(item.type) ? `
                     <div id="comments-${item._id}" class="comments-section" style="display: none;">
                         <div class="comment-form">
                             ${currentUser ? `
@@ -206,10 +206,8 @@ function setContentType(type) {
 
     // Update title
     let title;
-    if (type === 'all') {
-        title = 'All Content';
-    } else if (type === 'forum') {
-        title = 'Forum Posts';
+    if (type === 'forum') {
+        title = 'Forums Posts';
     } else {
         title = type.charAt(0).toUpperCase() + type.slice(1) + 's';
     }
@@ -267,7 +265,7 @@ async function loadComments(contentId) {
             <div class="comment">
                 <div class="comment-header">
                     <strong>${escapeHtml(comment.author_name)}</strong>
-                    <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+                    <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
                 </div>
                 <div class="comment-content">${escapeHtml(comment.content)}</div>
             </div>
