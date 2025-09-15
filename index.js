@@ -49,12 +49,68 @@ app.use(express.static('public'));
 // Auth routes at root level
 app.get('/login', passport.authenticate('zombieauth'));
 
-app.get('/callback',
-  passport.authenticate('zombieauth', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.redirect('/');
+// Track processed authorization codes to prevent double-processing
+const processedCodes = new Set();
+
+app.get('/callback', (req, res, next) => {
+  const authCode = req.query.code;
+  const state = req.query.state;
+
+  logger.info('OAuth callback received', {
+    hasCode: !!authCode,
+    hasState: !!state,
+    sessionId: req.sessionID
+  });
+
+  // Check if this authorization code was already processed
+  if (authCode && processedCodes.has(authCode)) {
+    logger.warn('Duplicate authorization code detected', { authCode: authCode.substring(0, 10) + '...' });
+    return res.redirect('/login?error=duplicate_request');
   }
-);
+
+  // Mark this code as being processed
+  if (authCode) {
+    processedCodes.add(authCode);
+    // Clean up old codes after 5 minutes
+    setTimeout(() => processedCodes.delete(authCode), 5 * 60 * 1000);
+  }
+
+  // Add error handling and prevent double processing
+  passport.authenticate('zombieauth', {
+    failureRedirect: '/login',
+    session: true
+  }, (err, user, info) => {
+    if (err) {
+      logger.error('OAuth callback error', {
+        error: err.message,
+        code: authCode ? authCode.substring(0, 10) + '...' : 'none',
+        state: state
+      });
+      return res.redirect('/login?error=auth_failed');
+    }
+
+    if (!user) {
+      logger.warn('OAuth callback failed - no user', { info });
+      return res.redirect('/login?error=auth_failed');
+    }
+
+    // Log in the user
+    req.logIn(user, (err) => {
+      if (err) {
+        logger.error('Login error after OAuth success', { error: err.message });
+        return res.redirect('/login?error=login_failed');
+      }
+
+      logger.info('User successfully authenticated via OAuth', {
+        userId: user.id,
+        email: user.email,
+        sessionId: req.sessionID
+      });
+
+      res.redirect('/');
+    });
+  })(req, res, next);
+});
 
 app.post('/logout', (req, res) => {
   req.logout((err) => {

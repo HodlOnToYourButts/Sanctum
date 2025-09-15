@@ -125,6 +125,7 @@ body::before {
     background: #222222;
     color: #00ff41;
     border-color: #00ff41;
+    border-right: 1px solid #00ff41;
     text-shadow: 0 0 3px #00ff41;
 }
 
@@ -175,12 +176,14 @@ body::before {
     background: #222222;
     color: #00ff41;
     border-color: #00ff41;
+    border-right: 1px solid #00ff41;
 }
 
 .sort-btn.active {
     background: #222222;
     color: #00ff41;
     border-color: #00ff41;
+    border-right: 1px solid #00ff41;
     text-shadow: 0 0 3px #00ff41;
 }
 
