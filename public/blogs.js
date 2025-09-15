@@ -8,7 +8,11 @@ async function checkAuth() {
         if (response.ok) {
             const user = await response.json();
             showLoggedInState(user);
+        } else if (response.status === 401) {
+            // Expected when not logged in - don't log as error
+            showLoggedOutState();
         } else {
+            console.warn('Auth check returned unexpected status:', response.status);
             showLoggedOutState();
         }
     } catch (error) {

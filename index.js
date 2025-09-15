@@ -47,7 +47,14 @@ app.use(passport.session());
 app.use(express.static('public'));
 
 // Auth routes at root level
-app.get('/login', passport.authenticate('zombieauth'));
+app.get('/login', (req, res, next) => {
+  logger.info('Login route accessed', {
+    sessionId: req.sessionID,
+    userAgent: req.get('User-Agent'),
+    query: req.query
+  });
+  passport.authenticate('zombieauth')(req, res, next);
+});
 
 // Track processed authorization codes to prevent double-processing
 const processedCodes = new Set();
@@ -83,8 +90,11 @@ app.get('/callback', (req, res, next) => {
     if (err) {
       logger.error('OAuth callback error', {
         error: err.message,
+        errorType: err.constructor.name,
+        stack: err.stack,
         code: authCode ? authCode.substring(0, 10) + '...' : 'none',
-        state: state
+        state: state,
+        query: req.query
       });
       return res.redirect('/login?error=auth_failed');
     }
@@ -256,6 +266,21 @@ app.get('/health', async (req, res) => {
     database: dbHealth ? 'connected' : 'disconnected',
     instance: process.env.INSTANCE_ID || 'unknown',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Debug route for OAuth2 configuration (remove in production)
+app.get('/debug/oauth', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  res.json({
+    issuer: process.env.ZOMBIEAUTH_ISSUER || 'NOT_SET',
+    clientId: process.env.ZOMBIEAUTH_CLIENT_ID ? 'SET' : 'NOT_SET',
+    clientSecret: process.env.ZOMBIEAUTH_CLIENT_SECRET ? 'SET' : 'NOT_SET',
+    callbackUrl: process.env.ZOMBIEAUTH_CALLBACK_URL || 'NOT_SET',
+    expectedCallback: `${req.protocol}://${req.get('host')}/callback`
   });
 });
 
