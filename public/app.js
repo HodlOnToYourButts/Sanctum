@@ -89,7 +89,7 @@ function displayContentFeed(contentList) {
     const container = document.getElementById('content-feed');
 
     if (contentList.length === 0) {
-        container.innerHTML = '<p class="loading">No content found.</p>';
+        container.innerHTML = '<p class="loading" style="text-align: center;">No content found.</p>';
         return;
     }
 
@@ -318,13 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadContentFeed();
 
-    // Add event listeners for navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            setContentType(item.dataset.type);
-        });
-    });
+    // Navigation now uses direct links, no JavaScript needed
 
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.addEventListener('click', () => {

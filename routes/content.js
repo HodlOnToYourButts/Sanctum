@@ -125,13 +125,9 @@ router.get('/feed', async (req, res) => {
         // Only include published content
         if (doc.status !== 'published') return false;
 
-        // Only include promoted content
-        return doc.promoted === true;
-      })
-      .filter(doc => {
-        // Filter by type if specified
+        // Filter by type and promotion status
         if (type && type !== 'all') {
-          // For specific type pages (/blogs, /forums), show all content of that type
+          // For specific type pages (/blogs, /forums), show all published content of that type
           return doc.type === type;
         }
         // For homepage ('all'), only show explicitly promoted content

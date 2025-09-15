@@ -71,7 +71,7 @@ function displayContentFeed(contentList) {
     const container = document.getElementById('content-feed');
 
     if (contentList.length === 0) {
-        container.innerHTML = '<p class="loading">No blogs found.</p>';
+        container.innerHTML = '<p class="loading" style="text-align: center;">No blogs found.</p>';
         return;
     }
 
