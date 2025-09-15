@@ -98,7 +98,7 @@
 
         .content-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             margin-bottom: 2rem;
             border-bottom: 1px solid #e2e8f0;
@@ -454,7 +454,7 @@
             <div class="header-left">
                 <button class="logo" onclick="window.location.href='/'">Sanctum</button>
                 <nav class="nav-menu">
-                    <a href="#" class="nav-item active" data-type="blog">Blogs</a>
+                    <a href="#" class="nav-item" data-type="blog">Blogs</a>
                     <a href="#" class="nav-item" data-type="forum">Forums</a>
                 </nav>
             </div>
@@ -471,7 +471,6 @@
 
     <div class="container">
         <div class="content-header">
-            <h2 id="content-type-title">Blogs</h2>
             <div class="sort-options">
                 <button class="sort-btn active" data-sort="new">New</button>
                 <button class="sort-btn" data-sort="top">Top</button>

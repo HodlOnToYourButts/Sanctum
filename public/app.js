@@ -64,7 +64,7 @@ async function loadSiteSettings() {
 }
 
 // Global state
-let currentContentType = 'blog';
+let currentContentType = 'all';
 let currentSort = 'new';
 let currentUser = null;
 
@@ -204,14 +204,7 @@ function setContentType(type) {
         }
     });
 
-    // Update title
-    let title;
-    if (type === 'forum') {
-        title = 'Forums Posts';
-    } else {
-        title = type.charAt(0).toUpperCase() + type.slice(1) + 's';
-    }
-    document.getElementById('content-type-title').textContent = title;
+    // No longer updating title since it's removed
 
     loadContentFeed();
 }
