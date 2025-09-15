@@ -3,11 +3,10 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const session = require('express-session');
-const passport = require('passport');
 const winston = require('winston');
 
 const database = require('./lib/database');
-require('./lib/auth');
+const oidcAuth = require('./lib/oidc-auth');
 const contentRoutes = require('./routes/content');
 
 const logger = winston.createLogger({
@@ -41,8 +40,7 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+// Passport removed - using manual OIDC implementation
 
 app.use(express.static('public'));
 
@@ -53,134 +51,32 @@ app.get('/login', (req, res, next) => {
     userAgent: req.get('User-Agent'),
     query: req.query
   });
-  passport.authenticate('zombieauth')(req, res, next);
+  oidcAuth.redirectToLogin(req, res);
 });
 
-// Track processed authorization codes to prevent double-processing
-const processedCodes = new Set();
-
-app.get('/callback', (req, res, next) => {
-  const authCode = req.query.code;
-  const state = req.query.state;
-
-  logger.info('OAuth callback received', {
-    hasCode: !!authCode,
-    hasState: !!state,
-    sessionId: req.sessionID,
-    userAgent: req.get('User-Agent'),
-    url: req.url,
-    headers: {
-      host: req.get('host'),
-      referer: req.get('referer')
-    }
-  });
-
-  // Check if this authorization code was already processed
-  if (authCode && processedCodes.has(authCode)) {
-    logger.warn('Duplicate authorization code detected', { authCode: authCode.substring(0, 10) + '...' });
-    return res.redirect('/login?error=duplicate_request');
-  }
-
-  // Mark this code as being processed
-  if (authCode) {
-    processedCodes.add(authCode);
-    // Clean up old codes after 5 minutes
-    setTimeout(() => processedCodes.delete(authCode), 5 * 60 * 1000);
-  }
-
-  // Add error handling and prevent double processing
-  passport.authenticate('zombieauth', {
-    failureRedirect: '/login',
-    session: true
-  }, (err, user, info) => {
-    if (err) {
-      logger.error('OAuth callback error', {
-        error: err.message,
-        errorType: err.constructor.name,
-        stack: err.stack,
-        code: authCode ? authCode.substring(0, 10) + '...' : 'none',
-        state: state,
-        query: req.query
-      });
-      return res.redirect('/login?error=auth_failed');
-    }
-
-    if (!user) {
-      logger.warn('OAuth callback failed - no user', { info });
-      return res.redirect('/login?error=auth_failed');
-    }
-
-    // Log in the user
-    req.logIn(user, (err) => {
-      if (err) {
-        logger.error('Login error after OAuth success', { error: err.message });
-        return res.redirect('/login?error=login_failed');
-      }
-
-      logger.info('User successfully authenticated via OAuth', {
-        userId: user.id,
-        email: user.email,
-        sessionId: req.sessionID
-      });
-
-      res.redirect('/');
-    });
-  })(req, res, next);
+// OIDC callback handler
+app.get('/callback', async (req, res) => {
+  await oidcAuth.handleCallback(req, res);
 });
 
 app.post('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
-    }
-    res.json({ message: 'Logged out successfully' });
-  });
+  oidcAuth.handleLogout(req, res);
 });
 
 app.get('/user', async (req, res) => {
-  if (!req.isAuthenticated()) {
+  const user = oidcAuth.getCurrentUser(req);
+  if (!user) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
 
-  try {
-    // Always try to fetch fresh data from OIDC first, fallback to session
-    const { fetchOIDCUserInfo, extractRoles } = require('./lib/auth');
-
-    try {
-      const freshUserInfo = await fetchOIDCUserInfo(req.user);
-      const currentRoles = extractRoles(freshUserInfo);
-
-      res.json({
-        id: req.user.id,
-        email: freshUserInfo.email,
-        name: freshUserInfo.name || freshUserInfo.preferred_username,
-        roles: currentRoles,
-        lastUpdated: new Date().toISOString(),
-        source: 'oidc'
-      });
-    } catch (oidcError) {
-      logger.warn('Failed to fetch fresh OIDC data, using session data', {
-        userId: req.user.id,
-        error: oidcError.message
-      });
-
-      // Fallback to session data if OIDC fails
-      res.json({
-        id: req.user.id,
-        email: req.user.email,
-        name: req.user.name,
-        roles: ['user'], // Fallback role
-        lastUpdated: req.user.loginTime,
-        source: 'session_fallback'
-      });
-    }
-  } catch (error) {
-    logger.error('Failed to fetch user data', {
-      userId: req.user.id,
-      error: error.message
-    });
-    res.status(500).json({ error: 'Failed to fetch user data' });
-  }
+  res.json({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    roles: user.roles,
+    lastUpdated: user.loginTime,
+    source: 'oidc'
+  });
 });
 
 // Site settings API
@@ -214,11 +110,7 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
-app.put('/api/settings', async (req, res) => {
-  const { requireRole } = require('./lib/auth');
-
-  // Check admin role
-  await requireRole('admin')(req, res, async () => {
+app.put('/api/settings', oidcAuth.requireOidcAuth('admin'), async (req, res) => {
     try {
       const { name, description } = req.body;
 
@@ -260,7 +152,6 @@ app.put('/api/settings', async (req, res) => {
       });
       res.status(500).json({ error: 'Failed to update site settings' });
     }
-  });
 });
 
 app.use('/api/content', contentRoutes);
