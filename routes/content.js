@@ -1,7 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const database = require('../lib/database');
-const { requireAuth, requireRole } = require('../lib/auth');
+const { requireOidcAuth } = require('../lib/oidc-auth');
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -214,7 +214,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireOidcAuth(), async (req, res) => {
   try {
     const { error, value } = contentSchema.validate(req.body);
     if (error) {
@@ -258,7 +258,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireOidcAuth(), async (req, res) => {
   try {
     const { error, value } = contentSchema.validate(req.body);
     if (error) {
@@ -302,7 +302,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireOidcAuth(), async (req, res) => {
   try {
     const db = database.getDb();
     const content = await db.get(req.params.id);
@@ -452,7 +452,7 @@ router.post('/:id/comments', async (req, res) => {
 });
 
 // Moderate comments (admin only)
-router.put('/:id/comments/:commentId', requireRole('admin'), async (req, res) => {
+router.put('/:id/comments/:commentId', requireOidcAuth('admin'), async (req, res) => {
   try {
     const { status } = req.body;
 
@@ -492,7 +492,7 @@ router.put('/:id/comments/:commentId', requireRole('admin'), async (req, res) =>
 });
 
 // Voting system
-router.post('/:id/vote', requireAuth, async (req, res) => {
+router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
   try {
     const { vote } = req.body; // 'up', 'down', or 'remove'
 
