@@ -66,7 +66,13 @@ app.get('/callback', (req, res, next) => {
   logger.info('OAuth callback received', {
     hasCode: !!authCode,
     hasState: !!state,
-    sessionId: req.sessionID
+    sessionId: req.sessionID,
+    userAgent: req.get('User-Agent'),
+    url: req.url,
+    headers: {
+      host: req.get('host'),
+      referer: req.get('referer')
+    }
   });
 
   // Check if this authorization code was already processed
