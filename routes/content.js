@@ -314,6 +314,7 @@ const commentSchema = Joi.object({
 // Get comments for a specific blog post
 router.get('/:id/comments', async (req, res) => {
   try {
+    await database.connect(); // Ensure database connection
     const db = database.getDb();
 
     // First check if the content exists and is a blog
@@ -326,29 +327,36 @@ router.get('/:id/comments', async (req, res) => {
       return res.status(403).json({ error: 'Comments are disabled for this post' });
     }
 
-    // Find comments for this content
+    // Find comments for this content (removed sort to avoid index issues)
     const result = await db.find({
       selector: {
         type: 'comment',
         content_id: req.params.id
-      },
-      sort: [{ 'created_at': 'asc' }]
+      }
     });
 
-    const comments = result.docs.map(doc => ({
-      _id: doc._id,
-      content: doc.content,
-      author_name: doc.author_name,
-      created_at: doc.created_at,
-      status: doc.status
-    }));
+    // Sort comments in JavaScript instead
+    let comments = result.docs
+      .filter(doc => doc.status === 'approved' || doc.status === 'pending') // Only show approved/pending comments
+      .map(doc => ({
+        _id: doc._id,
+        content: doc.content,
+        author_name: doc.author_name,
+        created_at: doc.created_at,
+        status: doc.status
+      }))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // Sort by date ascending
 
     res.json(comments);
   } catch (error) {
     if (error.statusCode === 404) {
       res.status(404).json({ error: 'Content not found' });
     } else {
-      logger.error('Error fetching comments', { id: req.params.id, error: error.message });
+      logger.error('Error fetching comments', {
+        id: req.params.id,
+        error: error.message,
+        stack: error.stack
+      });
       res.status(500).json({ error: 'Failed to fetch comments' });
     }
   }
@@ -362,6 +370,7 @@ router.post('/:id/comments', async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
+    await database.connect(); // Ensure database connection
     const db = database.getDb();
 
     // Check if the content exists and is a blog

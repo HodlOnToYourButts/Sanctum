@@ -52,8 +52,11 @@ async function loadSiteSettings() {
         const response = await fetch('/api/settings');
         if (response.ok) {
             const settings = await response.json();
-            document.querySelector('.logo').textContent = settings.name || 'Sanctum';
-            document.querySelector('.subtitle').textContent = settings.description || 'Distributed Content Management System';
+            const logoElement = document.querySelector('.logo');
+            if (logoElement) {
+                logoElement.textContent = settings.name || 'Sanctum';
+            }
+            // Note: subtitle element was removed from the UI
         }
     } catch (error) {
         console.error('Failed to load site settings:', error);
