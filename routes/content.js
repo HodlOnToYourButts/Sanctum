@@ -131,9 +131,10 @@ router.get('/feed', async (req, res) => {
       .filter(doc => {
         // Filter by type if specified
         if (type && type !== 'all') {
+          // For specific type pages (/blogs, /forums), show all content of that type
           return doc.type === type;
         }
-        // For 'all' tab, only show explicitly promoted content
+        // For homepage ('all'), only show explicitly promoted content
         if (type === 'all') {
           return doc.promoted === true;
         }

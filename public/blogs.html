@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanctum CMS</title>
+    <title>Blogs - Sanctum CMS</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
     <style>
         * {
@@ -89,16 +89,9 @@
             box-sizing: border-box;
         }
 
-        .subtitle {
-            color: #6b7280;
-            font-size: 1rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
         .content-header {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
             border-bottom: 1px solid #e2e8f0;
@@ -208,25 +201,6 @@
             font-style: italic;
         }
 
-        .features {
-            margin-top: 2rem;
-            text-align: left;
-        }
-
-        .features h3 {
-            color: #374151;
-            margin-bottom: 1rem;
-        }
-
-        .features ul {
-            color: #6b7280;
-            line-height: 1.6;
-        }
-
-        .features li {
-            margin-bottom: 0.5rem;
-        }
-
         .content-feed {
             max-width: 800px;
             margin: 0 auto;
@@ -318,20 +292,6 @@
             text-align: center;
         }
 
-        .content-tags {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .tag {
-            background: #e0e7ff;
-            color: #3730a3;
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
-
         .comment-btn {
             background: none;
             border: none;
@@ -414,6 +374,14 @@
             padding: 1rem;
         }
 
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -454,7 +422,7 @@
             <div class="header-left">
                 <button class="logo" onclick="window.location.href='/'">Sanctum</button>
                 <nav class="nav-menu">
-                    <a href="/blogs" class="nav-item">Blogs</a>
+                    <a href="/blogs" class="nav-item active">Blogs</a>
                     <a href="/forums" class="nav-item">Forums</a>
                 </nav>
             </div>
@@ -470,6 +438,8 @@
     </div>
 
     <div class="container">
+        <h1 class="page-title">Blogs</h1>
+
         <div class="content-header">
             <div class="sort-options">
                 <button class="sort-btn active" data-sort="new">New</button>
@@ -481,6 +451,6 @@
         <div id="content-feed" class="content-feed"></div>
     </div>
 
-    <script src="/app.js"></script>
+    <script src="/blogs.js"></script>
 </body>
 </html>

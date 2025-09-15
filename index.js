@@ -211,6 +211,14 @@ app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/public/admin.html');
 });
 
+app.get('/blogs', (req, res) => {
+  res.sendFile(__dirname + '/public/blogs.html');
+});
+
+app.get('/forums', (req, res) => {
+  res.sendFile(__dirname + '/public/forums.html');
+});
+
 app.get('/api', (req, res) => {
   res.json({
     message: 'Sanctum API',
