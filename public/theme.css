@@ -1,4 +1,4 @@
-/* Blue Prince Inspired Dark Theme */
+/* Blue Prince Room-Inspired Dark Theme */
 
 * {
     margin: 0;
@@ -8,22 +8,22 @@
 
 body {
     font-family: 'Georgia', 'Times New Roman', serif;
-    background: linear-gradient(135deg, #0a0f1c 0%, #162447 50%, #0a0f1c 100%);
+    background: linear-gradient(135deg, #1a0e0e 0%, #2d1b1b 50%, #1a0e0e 100%);
     background-attachment: fixed;
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    color: #e8edf7;
+    color: #f4f0e8;
     position: relative;
 }
 
-/* Header Styles */
+/* Header Styles - Lavender Purple Room */
 .header {
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 50%, #1e2749 100%);
-    border-bottom: 2px solid #4a69bd;
+    background: linear-gradient(135deg, #2a1f3d 0%, #3d2b5a 50%, #2a1f3d 100%);
+    border-bottom: 2px solid #7c6b9e;
     box-shadow:
-        0 0 15px rgba(74, 105, 189, 0.3),
-        inset 0 1px 0 rgba(74, 105, 189, 0.2);
+        0 0 15px rgba(124, 107, 158, 0.3),
+        inset 0 1px 0 rgba(124, 107, 158, 0.2);
     padding: 1rem 0;
     width: 100%;
     position: sticky;
@@ -44,8 +44,8 @@ body {
             90deg,
             transparent 0px,
             transparent 2px,
-            rgba(74, 105, 189, 0.05) 2px,
-            rgba(74, 105, 189, 0.05) 4px
+            rgba(124, 107, 158, 0.05) 2px,
+            rgba(124, 107, 158, 0.05) 4px
         );
     pointer-events: none;
 }
@@ -69,31 +69,31 @@ body {
     gap: 2rem;
 }
 
-/* Logo */
+/* Logo - Muted Yellow Accent */
 .logo {
     font-size: 2rem;
     font-weight: 800;
-    color: #c8d6e5;
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 100%);
-    border: 2px solid #4a69bd;
+    color: #e6d89a;
+    background: linear-gradient(135deg, #2a1f3d 0%, #3d2b5a 100%);
+    border: 2px solid #d4c266;
     border-radius: 6px;
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-shadow: 0 0 8px rgba(200, 214, 229, 0.4);
+    text-shadow: 0 0 8px rgba(230, 216, 154, 0.4);
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(200, 214, 229, 0.1);
+        inset 0 1px 0 rgba(230, 216, 154, 0.1);
     letter-spacing: 1px;
 }
 
 .logo:hover {
-    color: #ffffff;
-    border-color: #74b9ff;
+    color: #f0e5b3;
+    border-color: #e6d89a;
     box-shadow:
-        0 0 20px rgba(116, 185, 255, 0.4),
+        0 0 20px rgba(230, 216, 154, 0.4),
         0 6px 15px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        inset 0 1px 0 rgba(240, 229, 179, 0.2);
     transform: translateY(-2px);
 }
 
@@ -107,7 +107,7 @@ body {
     padding: 0.6rem 1.2rem;
     border-radius: 4px;
     text-decoration: none;
-    color: #a8b8d8;
+    color: #c4b5d8;
     font-weight: 500;
     transition: all 0.3s ease;
     border: 1px solid transparent;
@@ -115,10 +115,10 @@ body {
 
 .nav-item:hover,
 .nav-item.active {
-    background: linear-gradient(135deg, #2c3e7a 0%, #4a69bd 100%);
-    color: #e8edf7;
-    border-color: #74b9ff;
-    box-shadow: 0 2px 8px rgba(74, 105, 189, 0.3);
+    background: linear-gradient(135deg, #3d2b5a 0%, #5a4372 100%);
+    color: #f4f0e8;
+    border-color: #7c6b9e;
+    box-shadow: 0 2px 8px rgba(124, 107, 158, 0.3);
 }
 
 /* Container */
@@ -132,13 +132,13 @@ body {
     z-index: 1;
 }
 
-/* Content Header */
+/* Content Header - Green Room */
 .content-header {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     margin-bottom: 2rem;
-    border-bottom: 1px solid #4a69bd;
+    border-bottom: 1px solid #5a7c5a;
     padding-bottom: 1rem;
 }
 
@@ -149,12 +149,12 @@ body {
 
 .sort-btn {
     padding: 0.6rem 1.2rem;
-    border: 1px solid #4a69bd;
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 100%);
+    border: 1px solid #5a7c5a;
+    background: linear-gradient(135deg, #1e2e1e 0%, #2d4a2d 100%);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: #a8b8d8;
+    color: #a8c8a8;
     font-weight: 500;
     font-family: 'Georgia', serif;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -164,15 +164,15 @@ body {
 .sort-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    color: #e8edf7;
-    border-color: #74b9ff;
+    color: #c8e8c8;
+    border-color: #6a8e6a;
 }
 
 .sort-btn.active {
-    background: linear-gradient(135deg, #2c3e7a 0%, #4a69bd 100%);
-    color: #ffffff;
-    border-color: #74b9ff;
-    box-shadow: 0 0 8px rgba(116, 185, 255, 0.3);
+    background: linear-gradient(135deg, #2d4a2d 0%, #3f5f3f 100%);
+    color: #e8f5e8;
+    border-color: #6a8e6a;
+    box-shadow: 0 0 8px rgba(106, 142, 106, 0.3);
 }
 
 /* Content Feed */
@@ -182,25 +182,54 @@ body {
     width: 100%;
 }
 
+/* Content Items - Alternating Room Colors */
 .content-item {
-    background: linear-gradient(135deg, #1a2142 0%, #253b73 100%);
-    border: 1px solid #4a69bd;
     border-radius: 8px;
     margin-bottom: 1.5rem;
     padding: 1.5rem;
     transition: all 0.3s ease;
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(116, 185, 255, 0.1);
     position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Default: Dark Red Room */
+.content-item {
+    background: linear-gradient(135deg, #2d1a1a 0%, #4a2d2d 100%);
+    border: 1px solid #7a4f4f;
 }
 
 .content-item:hover {
     transform: translateY(-2px);
-    border-color: #74b9ff;
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(116, 185, 255, 0.2);
+    border-color: #9a6b6b;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Alternate content items with different room colors */
+.content-item:nth-child(2n) {
+    background: linear-gradient(135deg, #1e2e1e 0%, #2d4a2d 100%);
+    border: 1px solid #5a7c5a;
+}
+
+.content-item:nth-child(2n):hover {
+    border-color: #6a8e6a;
+}
+
+.content-item:nth-child(3n) {
+    background: linear-gradient(135deg, #3d2a1a 0%, #5a3d2a 100%);
+    border: 1px solid #8b5a2b;
+}
+
+.content-item:nth-child(3n):hover {
+    border-color: #a6691f;
+}
+
+.content-item:nth-child(5n) {
+    background: linear-gradient(135deg, #2a1f3d 0%, #3d2b5a 100%);
+    border: 1px solid #7c6b9e;
+}
+
+.content-item:nth-child(5n):hover {
+    border-color: #9580b8;
 }
 
 .content-header-item {
@@ -213,7 +242,7 @@ body {
 .content-title {
     font-size: 1.3rem;
     font-weight: 600;
-    color: #c8d6e5;
+    color: #f4f0e8;
     margin-bottom: 0.5rem;
     font-family: 'Georgia', serif;
     letter-spacing: 0.5px;
@@ -223,7 +252,7 @@ body {
 
 .content-meta {
     font-size: 0.9rem;
-    color: #74b9ff;
+    color: #d4c266;
     margin-bottom: 1rem;
     font-style: italic;
     opacity: 0.8;
@@ -231,7 +260,7 @@ body {
 }
 
 .content-body {
-    color: #e8edf7;
+    color: #f4f0e8;
     line-height: 1.7;
     margin-bottom: 1rem;
     font-family: 'Georgia', serif;
@@ -245,7 +274,7 @@ body {
     align-items: center;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(74, 105, 189, 0.3);
+    border-top: 1px solid rgba(244, 240, 232, 0.2);
 }
 
 .vote-buttons {
@@ -254,9 +283,10 @@ body {
     gap: 0.5rem;
 }
 
+/* Vote Buttons - Rusty Orange */
 .vote-btn {
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 100%);
-    border: 1px solid #4a69bd;
+    background: linear-gradient(135deg, #3d2a1a 0%, #5a3d2a 100%);
+    border: 1px solid #8b5a2b;
     border-radius: 4px;
     padding: 0.4rem 0.8rem;
     cursor: pointer;
@@ -264,33 +294,33 @@ body {
     align-items: center;
     gap: 0.25rem;
     transition: all 0.3s ease;
-    color: #a8b8d8;
+    color: #d4a574;
     font-weight: 500;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .vote-btn:hover {
     transform: translateY(-1px);
-    border-color: #74b9ff;
-    color: #e8edf7;
+    border-color: #a6691f;
+    color: #e8c5a0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .vote-btn.upvoted {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    color: #bfdbfe;
-    border-color: #60a5fa;
+    background: linear-gradient(135deg, #1e3a1e 0%, #2d5a2d 100%);
+    color: #a8d8a8;
+    border-color: #4a8a4a;
     box-shadow:
-        0 0 12px rgba(59, 130, 246, 0.4),
+        0 0 12px rgba(74, 138, 74, 0.4),
         0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .vote-btn.downvoted {
-    background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
-    color: #fecaca;
-    border-color: #f87171;
+    background: linear-gradient(135deg, #3a1e1e 0%, #5a2d2d 100%);
+    color: #d8a8a8;
+    border-color: #8a4a4a;
     box-shadow:
-        0 0 12px rgba(220, 38, 38, 0.4),
+        0 0 12px rgba(138, 74, 74, 0.4),
         0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
@@ -298,15 +328,15 @@ body {
     font-weight: 600;
     min-width: 2rem;
     text-align: center;
-    color: #c8d6e5;
+    color: #f4f0e8;
     font-family: 'Georgia', serif;
 }
 
-/* Comment Buttons */
+/* Comment Buttons - Lavender Purple */
 .comment-btn {
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 100%);
-    border: 1px solid #4a69bd;
-    color: #a8b8d8;
+    background: linear-gradient(135deg, #2a1f3d 0%, #3d2b5a 100%);
+    border: 1px solid #7c6b9e;
+    color: #c4b5d8;
     cursor: pointer;
     font-size: 0.875rem;
     padding: 0.4rem 0.8rem;
@@ -316,17 +346,17 @@ body {
 }
 
 .comment-btn:hover {
-    background: linear-gradient(135deg, #2c3e7a 0%, #4a69bd 100%);
-    color: #e8edf7;
-    border-color: #74b9ff;
+    background: linear-gradient(135deg, #3d2b5a 0%, #5a4372 100%);
+    color: #e4d5f8;
+    border-color: #9580b8;
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-/* Auth Elements */
+/* Auth Elements - Muted Yellow */
 .auth-button {
-    background: linear-gradient(135deg, #4a69bd 0%, #74b9ff 100%);
-    color: #1a2142;
+    background: linear-gradient(135deg, #b8a642 0%, #d4c266 100%);
+    color: #2d1b1b;
     border: none;
     padding: 0.8rem 1.5rem;
     border-radius: 6px;
@@ -346,21 +376,21 @@ body {
 }
 
 .auth-button:hover {
-    background: linear-gradient(135deg, #74b9ff 0%, #a8d8ff 100%);
+    background: linear-gradient(135deg, #d4c266 0%, #e6d89a 100%);
     transform: translateY(-2px);
     box-shadow:
-        0 0 15px rgba(116, 185, 255, 0.5),
+        0 0 15px rgba(212, 194, 102, 0.5),
         0 6px 12px rgba(0, 0, 0, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .auth-button.logout {
-    background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
-    color: #1a2142;
+    background: linear-gradient(135deg, #a64242 0%, #c25a5a 100%);
+    color: #f4f0e8;
 }
 
 .auth-button.logout:hover {
-    background: linear-gradient(135deg, #f87171 0%, #fca5a5 100%);
+    background: linear-gradient(135deg, #c25a5a 0%, #d47070 100%);
 }
 
 #auth-section {
@@ -381,7 +411,7 @@ body {
 
 .user-info-header {
     display: none;
-    color: #c8d6e5;
+    color: #f4f0e8;
     font-weight: 500;
 }
 
@@ -391,12 +421,12 @@ body {
 
 /* Loading and Messages */
 .loading {
-    color: #a8b8d8;
+    color: #d4c266;
     font-style: italic;
     font-family: 'Georgia', serif;
 }
 
-/* Category Grid (for forums) */
+/* Category Grid (for forums) - Green Room */
 .category-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -405,8 +435,8 @@ body {
 }
 
 .category-card {
-    background: linear-gradient(135deg, #1a2142 0%, #253b73 100%);
-    border: 1px solid #4a69bd;
+    background: linear-gradient(135deg, #1e2e1e 0%, #2d4a2d 100%);
+    border: 1px solid #5a7c5a;
     border-radius: 8px;
     padding: 1.5rem;
     transition: all 0.3s ease;
@@ -416,19 +446,19 @@ body {
 
 .category-card:hover {
     transform: translateY(-2px);
-    border-color: #74b9ff;
+    border-color: #6a8e6a;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .category-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #c8d6e5;
+    color: #f4f0e8;
     margin-bottom: 0.5rem;
 }
 
 .category-description {
-    color: #a8b8d8;
+    color: #c8e8c8;
     line-height: 1.5;
     margin-bottom: 1rem;
 }
@@ -438,18 +468,18 @@ body {
     justify-content: space-between;
     align-items: center;
     font-size: 0.875rem;
-    color: #74b9ff;
+    color: #a8c8a8;
 }
 
 .category-icon {
     font-size: 2rem;
     margin-bottom: 1rem;
-    color: #74b9ff;
+    color: #6a8e6a;
 }
 
 /* Comments */
 .comments-section {
-    border-top: 1px solid rgba(74, 105, 189, 0.3);
+    border-top: 1px solid rgba(244, 240, 232, 0.2);
     margin-top: 1rem;
     padding-top: 1rem;
 }
@@ -460,25 +490,25 @@ body {
 
 .comment-form textarea {
     width: 100%;
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 100%);
-    border: 1px solid #4a69bd;
+    background: linear-gradient(135deg, #2a1f3d 0%, #3d2b5a 100%);
+    border: 1px solid #7c6b9e;
     border-radius: 4px;
     padding: 0.75rem;
     margin-bottom: 0.5rem;
     resize: vertical;
     font-family: inherit;
-    color: #e8edf7;
+    color: #f4f0e8;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .comment-form textarea::placeholder {
-    color: #a8b8d8;
+    color: #c4b5d8;
     opacity: 0.7;
 }
 
 .btn-comment {
-    background: linear-gradient(135deg, #4a69bd 0%, #74b9ff 100%);
-    color: #1a2142;
+    background: linear-gradient(135deg, #b8a642 0%, #d4c266 100%);
+    color: #2d1b1b;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
@@ -489,13 +519,13 @@ body {
 }
 
 .btn-comment:hover {
-    background: linear-gradient(135deg, #74b9ff 0%, #a8d8ff 100%);
+    background: linear-gradient(135deg, #d4c266 0%, #e6d89a 100%);
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .comment {
-    border-bottom: 1px solid rgba(74, 105, 189, 0.2);
+    border-bottom: 1px solid rgba(244, 240, 232, 0.1);
     padding: 0.75rem 0;
 }
 
@@ -511,27 +541,27 @@ body {
 }
 
 .comment-date {
-    color: #74b9ff;
+    color: #d4c266;
     font-size: 0.75rem;
     opacity: 0.8;
 }
 
 .comment-content {
-    color: #e8edf7;
+    color: #f4f0e8;
     line-height: 1.5;
 }
 
 .no-comments {
-    color: #a8b8d8;
+    color: #c4b5d8;
     font-style: italic;
     text-align: center;
     padding: 1rem;
 }
 
-/* Forms */
+/* Forms - Rusty Orange Room */
 .section {
-    background: linear-gradient(135deg, #1a2142 0%, #253b73 100%);
-    border: 1px solid #4a69bd;
+    background: linear-gradient(135deg, #3d2a1a 0%, #5a3d2a 100%);
+    border: 1px solid #8b5a2b;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     margin-bottom: 2rem;
@@ -541,8 +571,8 @@ body {
 .section h2 {
     font-size: 1.5rem;
     margin-bottom: 1rem;
-    color: #c8d6e5;
-    border-bottom: 1px solid #4a69bd;
+    color: #f4f0e8;
+    border-bottom: 1px solid #8b5a2b;
     padding-bottom: 0.5rem;
 }
 
@@ -554,7 +584,7 @@ body {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #c8d6e5;
+    color: #f4f0e8;
 }
 
 .form-group input,
@@ -562,17 +592,17 @@ body {
 .form-group select {
     width: 100%;
     padding: 0.75rem;
-    background: linear-gradient(135deg, #1e2749 0%, #2c3e7a 100%);
-    border: 1px solid #4a69bd;
+    background: linear-gradient(135deg, #2d1a1a 0%, #4a2d2d 100%);
+    border: 1px solid #7a4f4f;
     border-radius: 4px;
     font-size: 1rem;
-    color: #e8edf7;
+    color: #f4f0e8;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: #a8b8d8;
+    color: #c8a8a8;
     opacity: 0.7;
 }
 
@@ -582,8 +612,8 @@ body {
 }
 
 .btn {
-    background: linear-gradient(135deg, #4a69bd 0%, #74b9ff 100%);
-    color: #1a2142;
+    background: linear-gradient(135deg, #b8a642 0%, #d4c266 100%);
+    color: #2d1b1b;
     border: none;
     padding: 0.75rem 1.5rem;
     border-radius: 4px;
@@ -594,14 +624,14 @@ body {
 }
 
 .btn:hover {
-    background: linear-gradient(135deg, #74b9ff 0%, #a8d8ff 100%);
+    background: linear-gradient(135deg, #d4c266 0%, #e6d89a 100%);
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .btn-secondary {
     background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
-    color: #1a2142;
+    color: #2d1b1b;
 }
 
 .btn-secondary:hover {
@@ -609,12 +639,12 @@ body {
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
-    color: #1a2142;
+    background: linear-gradient(135deg, #a64242 0%, #c25a5a 100%);
+    color: #f4f0e8;
 }
 
 .btn-danger:hover {
-    background: linear-gradient(135deg, #f87171 0%, #fca5a5 100%);
+    background: linear-gradient(135deg, #c25a5a 0%, #d47070 100%);
 }
 
 /* Content Grid */
@@ -626,7 +656,7 @@ body {
 
 .content-item h4 {
     margin-bottom: 0.5rem;
-    color: #c8d6e5;
+    color: #f4f0e8;
 }
 
 .content-actions {
@@ -636,8 +666,8 @@ body {
 
 .tag {
     display: inline-block;
-    background: linear-gradient(135deg, #4a69bd 0%, #74b9ff 100%);
-    color: #1a2142;
+    background: linear-gradient(135deg, #7c6b9e 0%, #9580b8 100%);
+    color: #f4f0e8;
     padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-size: 0.75rem;
@@ -646,19 +676,19 @@ body {
 }
 
 .error {
-    background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
-    color: #fecaca;
+    background: linear-gradient(135deg, #a64242 0%, #c25a5a 100%);
+    color: #f4f0e8;
     padding: 1rem;
     border-radius: 4px;
-    border: 1px solid #f87171;
+    border: 1px solid #d47070;
 }
 
 .success {
-    background: linear-gradient(135deg, #166534 0%, #22c55e 100%);
-    color: #bbf7d0;
+    background: linear-gradient(135deg, #4a6a4a 0%, #5a8a5a 100%);
+    color: #e8f5e8;
     padding: 1rem;
     border-radius: 4px;
-    border: 1px solid #86efac;
+    border: 1px solid #6a9a6a;
 }
 
 /* Responsive Design */
