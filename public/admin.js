@@ -108,7 +108,7 @@ function displayContent(contentList) {
             <div class="content-actions">
                 <button class="btn" onclick="editContent('${item._id}')">Edit</button>
                 <button class="btn btn-danger" onclick="deleteContent('${item._id}')">Delete</button>
-                ${item.type === 'blog' ? `<button class="btn btn-secondary" onclick="viewComments('${item._id}')">Comments</button>` : ''}
+                ${['blog', 'article', 'forum'].includes(item.type) ? `<button class="btn btn-secondary" onclick="viewComments('${item._id}')">Comments</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -123,7 +123,7 @@ async function createContent(formData) {
             promotable: formData.get('promotable') === 'on'
         };
 
-        if (contentData.type === 'blog' && formData.get('tags')) {
+        if (['blog', 'article', 'forum'].includes(contentData.type) && formData.get('tags')) {
             contentData.tags = formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag);
         }
 
@@ -223,9 +223,9 @@ document.getElementById('content-type').addEventListener('change', (e) => {
     const tagsGroup = document.getElementById('tags-group');
     const promotableCheckbox = document.getElementById('content-promotable');
 
-    if (e.target.value === 'blog') {
+    if (['blog', 'article', 'forum'].includes(e.target.value)) {
         tagsGroup.style.display = 'block';
-        promotableCheckbox.checked = true; // Blogs default to promotable
+        promotableCheckbox.checked = true; // Blogs, articles, forum posts default to promotable
     } else {
         tagsGroup.style.display = 'none';
         promotableCheckbox.checked = false; // Pages default to not promotable

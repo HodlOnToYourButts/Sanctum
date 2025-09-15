@@ -35,7 +35,27 @@ const blogSchema = Joi.object({
   promotable: Joi.boolean().default(true) // Blogs are promotable by default
 });
 
-const contentSchema = Joi.alternatives().try(pageSchema, blogSchema);
+const articleSchema = Joi.object({
+  type: Joi.string().valid('article').required(),
+  title: Joi.string().required(),
+  body: Joi.string().required(),
+  tags: Joi.array().items(Joi.string()).default([]),
+  status: Joi.string().valid('draft', 'published', 'archived').default('published'),
+  allow_comments: Joi.boolean().default(true),
+  promotable: Joi.boolean().default(true) // Articles are promotable by default
+});
+
+const forumSchema = Joi.object({
+  type: Joi.string().valid('forum').required(),
+  title: Joi.string().required(),
+  body: Joi.string().required(),
+  tags: Joi.array().items(Joi.string()).default([]),
+  status: Joi.string().valid('draft', 'published', 'archived').default('published'),
+  allow_comments: Joi.boolean().default(true),
+  promotable: Joi.boolean().default(true) // Forum posts are promotable by default
+});
+
+const contentSchema = Joi.alternatives().try(pageSchema, blogSchema, articleSchema, forumSchema);
 
 router.get('/', async (req, res) => {
   try {
@@ -47,7 +67,9 @@ router.get('/', async (req, res) => {
     const selector = {
       $or: [
         { type: 'page' },
-        { type: 'blog' }
+        { type: 'blog' },
+        { type: 'article' },
+        { type: 'forum' }
       ]
     };
 
@@ -98,7 +120,9 @@ router.get('/feed', async (req, res) => {
     const selector = {
       $or: [
         { type: 'page' },
-        { type: 'blog' }
+        { type: 'blog' },
+        { type: 'article' },
+        { type: 'forum' }
       ]
     };
 
@@ -113,8 +137,8 @@ router.get('/feed', async (req, res) => {
         // Only include published content
         if (doc.status !== 'published') return false;
 
-        // Only include promotable content (blogs are promotable by default)
-        if (doc.type === 'blog') return doc.promotable !== false;
+        // Only include promotable content (blogs, articles, forum posts are promotable by default)
+        if (doc.type === 'blog' || doc.type === 'article' || doc.type === 'forum') return doc.promotable !== false;
         if (doc.type === 'page') return doc.promotable === true;
 
         return false;
@@ -317,10 +341,10 @@ router.get('/:id/comments', async (req, res) => {
     await database.connect(); // Ensure database connection
     const db = database.getDb();
 
-    // First check if the content exists and is a blog
+    // First check if the content exists and allows comments
     const content = await db.get(req.params.id);
-    if (content.type !== 'blog') {
-      return res.status(400).json({ error: 'Comments only available for blog posts' });
+    if (!['blog', 'article', 'forum'].includes(content.type)) {
+      return res.status(400).json({ error: 'Comments only available for blogs, articles, and forum posts' });
     }
 
     if (!content.allow_comments) {
@@ -373,10 +397,10 @@ router.post('/:id/comments', async (req, res) => {
     await database.connect(); // Ensure database connection
     const db = database.getDb();
 
-    // Check if the content exists and is a blog
+    // Check if the content exists and allows comments
     const content = await db.get(req.params.id);
-    if (content.type !== 'blog') {
-      return res.status(400).json({ error: 'Comments only available for blog posts' });
+    if (!['blog', 'article', 'forum'].includes(content.type)) {
+      return res.status(400).json({ error: 'Comments only available for blogs, articles, and forum posts' });
     }
 
     if (!content.allow_comments) {
@@ -474,7 +498,7 @@ router.post('/:id/vote', requireAuth, async (req, res) => {
     const db = database.getDb();
     const content = await db.get(req.params.id);
 
-    if (!content.type || !['page', 'blog'].includes(content.type)) {
+    if (!content.type || !['page', 'blog', 'article', 'forum'].includes(content.type)) {
       return res.status(404).json({ error: 'Content not found' });
     }
 

@@ -108,11 +108,6 @@ function displayContentFeed(contentList) {
                     </div>
                 </div>
                 <div class="content-body">${escapeHtml(item.body)}</div>
-                ${item.tags && item.tags.length > 0 ? `
-                    <div class="content-tags">
-                        ${item.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
-                    </div>
-                ` : ''}
                 <div class="content-actions">
                     <div class="vote-buttons">
                         <button class="vote-btn ${userVote === 'up' ? 'upvoted' : ''}"
@@ -126,14 +121,14 @@ function displayContentFeed(contentList) {
                         </button>
                     </div>
                     <div class="comment-actions">
-                        ${item.allow_comments && item.type === 'blog' ? `
+                        ${item.allow_comments && ['blog', 'article', 'forum'].includes(item.type) ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
                                 💬 ${item.comment_count || 0} comments
                             </button>
                         ` : ''}
                     </div>
                 </div>
-                ${item.allow_comments && item.type === 'blog' ? `
+                ${item.allow_comments && ['blog', 'article', 'forum'].includes(item.type) ? `
                     <div id="comments-${item._id}" class="comments-section" style="display: none;">
                         <div class="comment-form">
                             ${currentUser ? `
@@ -210,7 +205,14 @@ function setContentType(type) {
     });
 
     // Update title
-    const title = type === 'all' ? 'All Content' : type.charAt(0).toUpperCase() + type.slice(1) + 's';
+    let title;
+    if (type === 'all') {
+        title = 'All Content';
+    } else if (type === 'forum') {
+        title = 'Forum Posts';
+    } else {
+        title = type.charAt(0).toUpperCase() + type.slice(1) + 's';
+    }
     document.getElementById('content-type-title').textContent = title;
 
     loadContentFeed();
