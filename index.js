@@ -211,12 +211,21 @@ app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/public/admin.html');
 });
 
-app.get('/blogs', (req, res) => {
+app.get('/b', (req, res) => {
   res.sendFile(__dirname + '/public/blogs.html');
 });
 
-app.get('/forums', (req, res) => {
+app.get('/f', (req, res) => {
   res.sendFile(__dirname + '/public/forums.html');
+});
+
+// Keep old routes for backwards compatibility
+app.get('/blogs', (req, res) => {
+  res.redirect('/b');
+});
+
+app.get('/forums', (req, res) => {
+  res.redirect('/f');
 });
 
 app.get('/api', (req, res) => {
