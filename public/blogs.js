@@ -191,6 +191,18 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function getRelativeTime(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
+    return `${Math.floor(diffInSeconds / 31536000)}y ago`;
+}
+
 async function toggleComments(contentId) {
     const commentsSection = document.getElementById(`comments-${contentId}`);
     if (commentsSection.style.display === 'none') {
@@ -216,15 +228,18 @@ async function loadComments(contentId) {
             return;
         }
 
-        commentsList.innerHTML = comments.map(comment => `
-            <div class="comment">
-                <div class="comment-header">
-                    <strong>${escapeHtml(comment.author_name)}</strong>
-                    <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+        commentsList.innerHTML = comments.map(comment => {
+            const commentDate = new Date(comment.created_at);
+            return `
+                <div class="comment">
+                    <div class="comment-header">
+                        <strong>${escapeHtml(comment.author_name)}</strong>
+                        <span class="comment-date" title="${commentDate.toLocaleString()}">${getRelativeTime(commentDate)}</span>
+                    </div>
+                    <div class="comment-content">${escapeHtml(comment.content)}</div>
                 </div>
-                <div class="comment-content">${escapeHtml(comment.content)}</div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (error) {
         console.error('Error loading comments:', error);
         document.getElementById(`comments-list-${contentId}`).innerHTML =
