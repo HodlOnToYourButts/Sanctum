@@ -30,6 +30,9 @@ function showLoggedInState(user) {
     }
 
     document.getElementById('auth-section').innerHTML = authButtons;
+
+    // Update create blog button visibility
+    updateNavActiveState();
 }
 
 function showLoggedOutState() {
@@ -235,12 +238,24 @@ function setContentType(type) {
     // Update nav active state
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
-        if (item.dataset.type === type) {
+        if (item.dataset.content === type) {
             item.classList.add('active');
         }
     });
 
-    // No longer updating title since it's removed
+    // Show/hide create blog button based on content type
+    const createBlogBtn = document.getElementById('create-blog-btn');
+    if (createBlogBtn) {
+        if (type === 'blog' && currentUser) {
+            createBlogBtn.style.display = 'block';
+        } else {
+            createBlogBtn.style.display = 'none';
+        }
+    }
+
+    // Update URL without page reload
+    const newUrl = type === 'all' ? '/' : `/${type}s`;
+    window.history.pushState({contentType: type}, '', newUrl);
 
     loadContentFeed();
 }
@@ -426,12 +441,52 @@ function createNewBlog() {
     window.location.href = '/blogs/create';
 }
 
+// Initialize content type from URL
+function initializeContentType() {
+    const path = window.location.pathname;
+    if (path === '/blogs') {
+        setContentType('blog');
+    } else if (path === '/forums') {
+        setContentType('forum');
+    } else {
+        setContentType('all');
+    }
+}
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.contentType) {
+        currentContentType = event.state.contentType;
+        updateNavActiveState();
+        loadContentFeed();
+    } else {
+        initializeContentType();
+    }
+});
+
+function updateNavActiveState() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.content === currentContentType) {
+            item.classList.add('active');
+        }
+    });
+
+    // Show/hide create blog button
+    const createBlogBtn = document.getElementById('create-blog-btn');
+    if (createBlogBtn) {
+        if (currentContentType === 'blog' && currentUser) {
+            createBlogBtn.style.display = 'block';
+        } else {
+            createBlogBtn.style.display = 'none';
+        }
+    }
+}
+
 // Check authentication status on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
-    loadContentFeed();
-
-    // Navigation now uses direct links, no JavaScript needed
+    initializeContentType();
 
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.addEventListener('click', () => {

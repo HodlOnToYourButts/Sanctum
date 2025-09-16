@@ -118,6 +118,7 @@ body::before {
     font-family: 'Courier New', monospace;
     background: #111111;
     font-size: 0.9rem;
+    cursor: pointer;
 }
 
 .nav-item:last-child {

@@ -13,8 +13,8 @@
             <div class="header-left">
                 <button class="logo" onclick="window.location.href='/'">Sanctum</button>
                 <nav class="nav-menu">
-                    <a href="/blogs" class="nav-item">Blogs</a>
-                    <a href="/forums" class="nav-item">Forums</a>
+                    <button class="nav-item" data-content="blog" onclick="setContentType('blog')">Blogs</button>
+                    <button class="nav-item" data-content="forum" onclick="setContentType('forum')">Forums</button>
                 </nav>
             </div>
             <div class="user-auth-section">
@@ -34,6 +34,9 @@
                 <button class="sort-btn active" data-sort="new">New</button>
                 <button class="sort-btn" data-sort="top">Top</button>
             </div>
+            <button id="create-blog-btn" class="btn-create" onclick="createNewBlog()" style="display: none;">
+                Create Blog
+            </button>
         </div>
 
         <div id="content-loading" class="loading">Loading content...</div>
