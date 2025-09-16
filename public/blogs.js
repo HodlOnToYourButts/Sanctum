@@ -43,9 +43,24 @@ function showLoggedOutState() {
 
 async function logout() {
     try {
-        const response = await fetch('/logout', { method: 'POST' });
+        const response = await fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
         if (response.ok) {
-            showLoggedOutState();
+            const result = await response.json();
+            if (result.success) {
+                showLoggedOutState();
+                // Optionally redirect to OIDC logout URL for complete logout
+                if (result.logoutUrl) {
+                    window.location.href = result.logoutUrl;
+                }
+            } else {
+                console.error('Logout failed:', result.error);
+            }
         } else {
             console.error('Logout failed');
         }
@@ -81,19 +96,36 @@ function displayContentFeed(contentList) {
 
     container.innerHTML = contentList.map(item => {
         const userVote = getUserVote(item._id);
+        const isAuthor = currentUser && currentUser.id === item.author_id;
+        const isModerator = currentUser && (currentUser.roles.includes('admin') || currentUser.roles.includes('moderator'));
+        const canEdit = isAuthor || isModerator;
+
         return `
             <div class="content-item">
                 <div class="content-header-item">
                     <div>
-                        <div class="content-title">${escapeHtml(item.title)}</div>
+                        <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
                         <div class="content-meta">
                             By ${escapeHtml(item.author_name || 'Unknown')} •
                             ${new Date(item.created_at).toLocaleDateString()} •
                             ${item.type}
+                            ${item.featured ? '<span class="featured-badge">Featured</span>' : ''}
                         </div>
                     </div>
+                    <div class="content-admin-actions">
+                        ${isModerator && !item.featured ? `
+                            <button class="admin-btn promote-btn" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
+                                ⭐ Promote
+                            </button>
+                        ` : ''}
+                        ${canEdit ? `
+                            <button class="admin-btn edit-btn" onclick="editPost('${item._id}')" title="Edit post">
+                                ✏️ Edit
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="content-body">${escapeHtml(item.body)}</div>
+                <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
                 <div class="content-actions">
                     <div class="vote-buttons">
                         <button class="vote-btn ${userVote === 'up' ? 'upvoted' : ''}"
@@ -288,6 +320,70 @@ async function submitComment(contentId) {
     } catch (error) {
         console.error('Error submitting comment:', error);
         alert('Failed to submit comment. Please try again.');
+    }
+}
+
+// View full post
+function viewFullPost(postId) {
+    window.location.href = `/blogs/${postId}`;
+}
+
+// Promote post to front page
+async function promoteToFrontPage(postId) {
+    try {
+        const response = await fetch(`/api/content/${postId}/promote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Post promoted to front page successfully!');
+            loadContentFeed(); // Refresh the feed
+        } else {
+            const error = await response.json();
+            alert(`Failed to promote post: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error promoting post:', error);
+        alert('Failed to promote post. Please try again.');
+    }
+}
+
+// Edit post
+function editPost(postId) {
+    // For now, redirect to a simple edit form
+    // Later this could be a modal or inline editor
+    const newBody = prompt('Edit post content:');
+    if (newBody !== null) {
+        updatePost(postId, newBody);
+    }
+}
+
+// Update post content
+async function updatePost(postId, newBody) {
+    try {
+        const response = await fetch(`/api/content/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                body: newBody
+            })
+        });
+
+        if (response.ok) {
+            alert('Post updated successfully!');
+            loadContentFeed(); // Refresh the feed
+        } else {
+            const error = await response.json();
+            alert(`Failed to update post: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error updating post:', error);
+        alert('Failed to update post. Please try again.');
     }
 }
 

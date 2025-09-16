@@ -272,7 +272,11 @@ router.put('/:id', requireOidcAuth(), async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
-    if (existingContent.author.id !== req.user.id && !(req.user.currentRoles && req.user.currentRoles.includes('admin'))) {
+    // Check if user can edit this content (author, admin, or moderator)
+    const isAuthor = existingContent.author_id === req.user.id;
+    const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
+
+    if (!isAuthor && !isModerator) {
       return res.status(403).json({ error: 'Cannot edit content by another author' });
     }
 
@@ -568,6 +572,62 @@ router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
     } else {
       logger.error('Error voting on content', { error: error.message });
       res.status(500).json({ error: 'Failed to vote' });
+    }
+  }
+});
+
+// Get individual content item by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const db = database.getDb();
+    const content = await db.get(req.params.id);
+
+    if (content.status === 'archived' && (!req.user || !req.user.roles.includes('admin'))) {
+      return res.status(404).json({ error: 'Content not found' });
+    }
+
+    res.json(content);
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error fetching content', { error: error.message });
+      res.status(500).json({ error: 'Failed to fetch content' });
+    }
+  }
+});
+
+// Promote content to front page (admin/moderator only)
+router.post('/:id/promote', requireOidcAuth(), async (req, res) => {
+  try {
+    // Check if user has permission to promote
+    const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
+    if (!isModerator) {
+      return res.status(403).json({ error: 'Only admins and moderators can promote content' });
+    }
+
+    const db = database.getDb();
+    const content = await db.get(req.params.id);
+
+    // Update the content to mark as featured
+    content.featured = true;
+    content.featured_at = new Date().toISOString();
+    content.featured_by = req.user.id;
+
+    await db.insert(content);
+
+    logger.info('Content promoted to front page', {
+      contentId: req.params.id,
+      promotedBy: req.user.id
+    });
+
+    res.json({ message: 'Content promoted successfully' });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error promoting content', { error: error.message });
+      res.status(500).json({ error: 'Failed to promote content' });
     }
   }
 });

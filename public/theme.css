@@ -238,7 +238,7 @@ body::before {
 
 /* Content inside the terminal window */
 .content-item > * {
-    margin-top: 2.5rem;
+    margin-top: 3rem;
     padding: 0 1rem 1rem;
 }
 
@@ -249,6 +249,54 @@ body::before {
     margin-bottom: 0.5rem;
     margin-top: 0;
     padding-top: 1rem;
+}
+
+.content-admin-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.admin-btn {
+    background: #333333;
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s ease;
+    border-radius: 0;
+}
+
+.admin-btn:hover {
+    background: #00ff41;
+    color: #000000;
+    box-shadow: 0 0 5px #00ff41;
+}
+
+.clickable-title {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.clickable-title:hover {
+    color: #00ff41;
+    text-shadow: 0 0 3px #00ff41;
+}
+
+.clickable-content {
+    cursor: pointer;
+}
+
+.featured-badge {
+    background: #ff6600;
+    color: #ffffff;
+    padding: 0.125rem 0.25rem;
+    font-size: 0.6rem;
+    border-radius: 2px;
+    margin-left: 0.5rem;
+    font-weight: bold;
 }
 
 .content-title {

@@ -197,6 +197,11 @@ app.get('/forums', (req, res) => {
   res.sendFile(__dirname + '/public/forums.html');
 });
 
+// Individual blog post view
+app.get('/blogs/:id', (req, res) => {
+  res.sendFile(__dirname + '/public/blog-post.html');
+});
+
 app.get('/api', (req, res) => {
   res.json({
     message: 'Sanctum API',

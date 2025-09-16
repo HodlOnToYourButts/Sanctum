@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="post-title">Sanctum | Blog Post</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text x='50' y='35' text-anchor='middle' fill='%2300ff41' font-family='monospace' font-size='20' font-weight='bold'>S</text><text x='20' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>01</text><text x='50' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>10</text><text x='80' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>11</text><text x='35' y='80' fill='%2300ff41' font-family='monospace' font-size='8'>01</text><text x='65' y='80' fill='%2300ff41' font-family='monospace' font-size='8'>10</text></svg>">
+    <link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <button class="logo" onclick="window.location.href='/'">Sanctum</button>
+                <nav class="nav-menu">
+                    <a href="/blogs" class="nav-item active">Blogs</a>
+                    <a href="/forums" class="nav-item">Forums</a>
+                </nav>
+            </div>
+            <div class="user-auth-section">
+                <div id="user-info" class="user-info-header">
+                    <span id="user-name-header"></span>
+                </div>
+                <div id="auth-section">
+                    <div id="loading" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="loading-post" class="loading">Loading post...</div>
+        <div id="post-content" class="content-item" style="display: none;">
+            <div class="content-header-item">
+                <div>
+                    <div id="content-title" class="content-title"></div>
+                    <div id="content-meta" class="content-meta"></div>
+                </div>
+                <div id="admin-actions" class="content-admin-actions"></div>
+            </div>
+            <div id="content-body" class="content-body"></div>
+            <div id="content-actions" class="content-actions">
+                <div class="vote-buttons">
+                    <button id="upvote-btn" class="vote-btn" onclick="vote('up')">
+                        ↑ <span id="upvote-count">0</span>
+                    </button>
+                    <span id="vote-score" class="vote-score">0</span>
+                    <button id="downvote-btn" class="vote-btn" onclick="vote('down')">
+                        ↓ <span id="downvote-count">0</span>
+                    </button>
+                </div>
+                <div class="comment-actions">
+                    <button id="toggle-comments-btn" class="comment-btn" onclick="toggleComments()">
+                        💬 <span id="comment-count">0</span> comments
+                    </button>
+                </div>
+            </div>
+            <div id="comments-section" class="comments-section" style="display: none;">
+                <div class="comment-form">
+                    <div id="comment-form-content">
+                        <p>Login to leave a comment</p>
+                    </div>
+                </div>
+                <div id="comments-list" class="comments-list"></div>
+            </div>
+        </div>
+
+        <div class="navigation-actions" style="margin-top: 2rem; text-align: center;">
+            <a href="/blogs" class="auth-button">← Back to Blogs</a>
+        </div>
+    </div>
+
+    <script src="/blog-post.js"></script>
+</body>
+</html>

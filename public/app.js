@@ -40,9 +40,24 @@ function showLoggedOutState() {
 
 async function logout() {
     try {
-        const response = await fetch('/logout', { method: 'POST' });
+        const response = await fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
         if (response.ok) {
-            showLoggedOutState();
+            const result = await response.json();
+            if (result.success) {
+                showLoggedOutState();
+                // Optionally redirect to OIDC logout URL for complete logout
+                if (result.logoutUrl) {
+                    window.location.href = result.logoutUrl;
+                }
+            } else {
+                console.error('Logout failed:', result.error);
+            }
         } else {
             console.error('Logout failed');
         }
