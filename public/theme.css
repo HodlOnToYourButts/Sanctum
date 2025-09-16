@@ -242,7 +242,6 @@ body::before {
 
 /* Content inside the terminal window */
 .content-item > * {
-    margin-top: 6rem;
     padding: 0 1rem 1rem;
 }
 
@@ -251,8 +250,7 @@ body::before {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.5rem;
-    margin-top: 0;
-    padding-top: 1rem;
+    padding-top: 3rem;
 }
 
 .content-admin-actions {

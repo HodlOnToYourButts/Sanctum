@@ -30,12 +30,18 @@ function showLoggedInState(user) {
     }
 
     document.getElementById('auth-section').innerHTML = authButtons;
+
+    // Show create blog button when logged in
+    document.getElementById('create-blog-btn').style.display = 'block';
 }
 
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
         '<a href="/login" class="auth-button">Login / Sign Up</a>';
+
+    // Hide create blog button when logged out
+    document.getElementById('create-blog-btn').style.display = 'none';
 }
 
 async function logout() {
@@ -99,20 +105,41 @@ function displayContentFeed(contentList) {
     }
 
     container.innerHTML = contentList.map(item => {
-        const userVote = getUserVote(item._id); // TODO: Get actual user vote
+        const userVote = getUserVote(item._id);
+        const isAuthor = currentUser && currentUser.id === item.author_id;
+        const isModerator = currentUser && (currentUser.roles.includes('admin') || currentUser.roles.includes('moderator'));
+        const canEdit = isAuthor || isModerator;
+
         return `
             <div class="content-item">
                 <div class="content-header-item">
                     <div>
-                        <div class="content-title">${escapeHtml(item.title)}</div>
+                        <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
                         <div class="content-meta">
                             By ${escapeHtml(item.author_name || 'Unknown')} •
                             ${new Date(item.created_at).toLocaleDateString()} •
                             ${item.type}
+                            ${item.featured ? '<span class="featured-badge">Featured</span>' : ''}
                         </div>
                     </div>
+                    <div class="content-admin-actions">
+                        ${isModerator ? (item.featured ? `
+                            <button class="admin-btn demote-btn" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
+                                ⭐ Demote
+                            </button>
+                        ` : `
+                            <button class="admin-btn promote-btn" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
+                                ⭐ Promote
+                            </button>
+                        `) : ''}
+                        ${canEdit ? `
+                            <button class="admin-btn edit-btn" onclick="editPost('${item._id}')" title="Edit post">
+                                ✏️ Edit
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="content-body">${escapeHtml(item.body)}</div>
+                <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
                 <div class="content-actions">
                     <div class="vote-buttons">
                         <button class="vote-btn ${userVote === 'up' ? 'upvoted' : ''}"
@@ -126,14 +153,14 @@ function displayContentFeed(contentList) {
                         </button>
                     </div>
                     <div class="comment-actions">
-                        ${item.allow_comments && ['blog', 'forum'].includes(item.type) ? `
+                        ${item.allow_comments ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
                                 💬 ${item.comment_count || 0} comments
                             </button>
                         ` : ''}
                     </div>
                 </div>
-                ${item.allow_comments && ['blog', 'forum'].includes(item.type) ? `
+                ${item.allow_comments ? `
                     <div id="comments-${item._id}" class="comments-section" style="display: none;">
                         <div class="comment-form">
                             ${currentUser ? `
@@ -330,6 +357,67 @@ async function submitComment(contentId) {
         console.error('Error submitting comment:', error);
         alert('Failed to submit comment. Please try again.');
     }
+}
+
+// View full post
+function viewFullPost(postId) {
+    window.location.href = `/blogs/${postId}`;
+}
+
+// Promote post to front page
+async function promoteToFrontPage(postId) {
+    try {
+        const response = await fetch(`/api/content/${postId}/promote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Post promoted to front page successfully!');
+            loadContentFeed(); // Refresh the feed
+        } else {
+            const error = await response.json();
+            alert(`Failed to promote post: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error promoting post:', error);
+        alert('Failed to promote post. Please try again.');
+    }
+}
+
+// Demote post from front page
+async function demoteFromFrontPage(postId) {
+    try {
+        const response = await fetch(`/api/content/${postId}/demote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Post removed from front page successfully!');
+            loadContentFeed(); // Refresh the feed
+        } else {
+            const error = await response.json();
+            alert(`Failed to demote post: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error demoting post:', error);
+        alert('Failed to demote post. Please try again.');
+    }
+}
+
+// Edit post
+function editPost(postId) {
+    window.location.href = `/blogs/edit/${postId}`;
+}
+
+// Create new blog
+function createNewBlog() {
+    window.location.href = '/blogs/create';
 }
 
 // Check authentication status on page load
