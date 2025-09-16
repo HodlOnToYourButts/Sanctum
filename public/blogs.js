@@ -121,16 +121,16 @@ function displayContentFeed(contentList) {
                     <div class="content-admin-actions">
                         ${isModerator ? (item.featured ? `
                             <button class="admin-btn demote-btn" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
-                                ⭐ Demote
+                                [DEMOTE]
                             </button>
                         ` : `
                             <button class="admin-btn promote-btn" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
-                                ⭐ Promote
+                                [PROMOTE]
                             </button>
                         `) : ''}
                         ${canEdit ? `
                             <button class="admin-btn edit-btn" onclick="editPost('${item._id}')" title="Edit post">
-                                ✏️ Edit
+                                [EDIT]
                             </button>
                         ` : ''}
                     </div>
@@ -151,7 +151,7 @@ function displayContentFeed(contentList) {
                     <div class="comment-actions">
                         ${item.allow_comments ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
-                                💬 ${item.comment_count || 0} comments
+                                [MSG] ${item.comment_count || 0} comments
                             </button>
                         ` : ''}
                     </div>

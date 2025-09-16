@@ -180,7 +180,7 @@ function updateAdminActions() {
     if (isModerator && !currentPost.featured) {
         actionsHtml += `
             <button class="admin-btn promote-btn" onclick="promoteToFrontPage()" title="Promote to front page">
-                ⭐ Promote
+                [PROMOTE]
             </button>
         `;
     }
@@ -188,7 +188,7 @@ function updateAdminActions() {
     if (canEdit) {
         actionsHtml += `
             <button class="admin-btn edit-btn" onclick="editPost()" title="Edit post">
-                ✏️ Edit
+                [EDIT]
             </button>
         `;
     }
