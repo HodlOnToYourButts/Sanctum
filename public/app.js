@@ -38,7 +38,7 @@ function showLoggedInState(user) {
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
-        '<a href="/login" class="auth-button">Login / Sign Up</a>';
+        '<a href="/login" class="auth-button">Login</a>';
 }
 
 async function logout() {
@@ -78,6 +78,12 @@ let currentUser = null;
 
 async function loadContentFeed() {
     try {
+        // Don't load content feed for forum type, use loadForumCategories instead
+        if (currentContentType === 'forum') {
+            loadForumCategories();
+            return;
+        }
+
         const response = await fetch(`/api/content/feed?type=${currentContentType}&sort=${currentSort}`);
         if (!response.ok) {
             throw new Error('Failed to load content feed');

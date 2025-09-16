@@ -189,13 +189,6 @@ app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/public/admin.html');
 });
 
-app.get('/blogs', (req, res) => {
-  res.sendFile(__dirname + '/public/blogs.html');
-});
-
-app.get('/forums', (req, res) => {
-  res.sendFile(__dirname + '/public/forums.html');
-});
 
 // Blog creation page
 app.get('/blogs/create', (req, res) => {
