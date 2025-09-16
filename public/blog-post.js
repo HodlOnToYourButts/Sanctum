@@ -179,16 +179,16 @@ function updateAdminActions() {
 
     if (isModerator && !currentPost.featured) {
         actionsHtml += `
-            <button class="admin-btn promote-btn" onclick="promoteToFrontPage()" title="Promote to front page">
-                [PROMOTE]
+            <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage()" title="Promote to front page">
+                PROMOTE
             </button>
         `;
     }
 
     if (canEdit) {
         actionsHtml += `
-            <button class="admin-btn edit-btn" onclick="editPost()" title="Edit post">
-                [EDIT]
+            <button class="admin-btn admin-btn-nav" onclick="editPost()" title="Edit post">
+                Edit
             </button>
         `;
     }

@@ -277,6 +277,35 @@ body::before {
     box-shadow: 0 0 5px #00ff41;
 }
 
+/* Admin buttons for actions that stay on same page */
+.admin-btn-action::before {
+    content: '[';
+    color: inherit;
+}
+
+.admin-btn-action::after {
+    content: ']';
+    color: inherit;
+}
+
+/* Admin buttons for navigation to other pages */
+.admin-btn-nav::before {
+    content: '> ';
+    color: inherit;
+}
+
+/* Demote button - red styling */
+.admin-btn-demote {
+    color: #ff4444;
+    border-color: #ff4444;
+}
+
+.admin-btn-demote:hover {
+    background: #ff4444;
+    color: #000000;
+    box-shadow: 0 0 5px #ff4444;
+}
+
 .clickable-title {
     cursor: pointer;
     transition: color 0.2s ease;
@@ -304,15 +333,6 @@ body::before {
     text-shadow: 0 0 3px #00ff41;
 }
 
-.featured-badge::before {
-    content: '[';
-    color: #00ff41;
-}
-
-.featured-badge::after {
-    content: ']';
-    color: #00ff41;
-}
 
 .content-title {
     font-size: 1.2rem;
@@ -828,7 +848,7 @@ body::before {
 }
 
 .btn-create::before {
-    content: '[CREATE] ';
+    content: '> ';
 }
 
 .btn-create:hover {

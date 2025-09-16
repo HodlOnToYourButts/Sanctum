@@ -120,17 +120,17 @@ function displayContentFeed(contentList) {
                     </div>
                     <div class="content-admin-actions">
                         ${isModerator ? (item.featured ? `
-                            <button class="admin-btn demote-btn" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
-                                [DEMOTE]
+                            <button class="admin-btn admin-btn-action admin-btn-demote" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
+                                DEMOTE
                             </button>
                         ` : `
-                            <button class="admin-btn promote-btn" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
-                                [PROMOTE]
+                            <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
+                                PROMOTE
                             </button>
                         `) : ''}
                         ${canEdit ? `
-                            <button class="admin-btn edit-btn" onclick="editPost('${item._id}')" title="Edit post">
-                                [EDIT]
+                            <button class="admin-btn admin-btn-nav" onclick="editPost('${item._id}')" title="Edit post">
+                                Edit
                             </button>
                         ` : ''}
                     </div>
