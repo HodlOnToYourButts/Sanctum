@@ -97,6 +97,10 @@ body::before {
     box-shadow: 0 0 10px #00ff41;
 }
 
+.logo:hover::before {
+    color: #000000;
+}
+
 /* Navigation */
 .nav-menu {
     display: flex;
@@ -143,7 +147,7 @@ body::before {
 /* Content Header */
 .content-header {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
     border-bottom: 1px solid #333333;
@@ -238,7 +242,7 @@ body::before {
 
 /* Content inside the terminal window */
 .content-item > * {
-    margin-top: 3rem;
+    margin-top: 6rem;
     padding: 0 1rem 1rem;
 }
 

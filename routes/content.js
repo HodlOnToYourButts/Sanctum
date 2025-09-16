@@ -130,9 +130,9 @@ router.get('/feed', async (req, res) => {
           // For specific type pages (/blogs, /forums), show all published content of that type
           return doc.type === type;
         }
-        // For homepage ('all'), only show explicitly promoted content
+        // For homepage ('all'), only show explicitly featured content
         if (type === 'all') {
-          return doc.promoted === true;
+          return doc.featured === true;
         }
         return true;
       })
@@ -148,7 +148,8 @@ router.get('/feed', async (req, res) => {
         tags: doc.tags || [],
         votes: doc.votes || { up: 0, down: 0, score: 0 },
         allow_comments: doc.allow_comments,
-        comment_count: 0 // Will be calculated below
+        comment_count: 0, // Will be calculated below
+        featured: doc.featured || false
       }));
 
     // Sort items
@@ -628,6 +629,41 @@ router.post('/:id/promote', requireOidcAuth(), async (req, res) => {
     } else {
       logger.error('Error promoting content', { error: error.message });
       res.status(500).json({ error: 'Failed to promote content' });
+    }
+  }
+});
+
+// Demote content from front page (admin/moderator only)
+router.post('/:id/demote', requireOidcAuth(), async (req, res) => {
+  try {
+    // Check if user has permission to demote
+    const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
+    if (!isModerator) {
+      return res.status(403).json({ error: 'Only admins and moderators can demote content' });
+    }
+
+    const db = database.getDb();
+    const content = await db.get(req.params.id);
+
+    // Update the content to remove featured status
+    content.featured = false;
+    delete content.featured_at;
+    delete content.featured_by;
+
+    await db.insert(content);
+
+    logger.info('Content demoted from front page', {
+      contentId: req.params.id,
+      demotedBy: req.user.id
+    });
+
+    res.json({ message: 'Content demoted successfully' });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error demoting content', { error: error.message });
+      res.status(500).json({ error: 'Failed to demote content' });
     }
   }
 });

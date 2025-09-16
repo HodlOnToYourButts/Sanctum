@@ -302,10 +302,7 @@ async function promoteToFrontPage() {
 }
 
 function editPost() {
-    const newBody = prompt('Edit post content:', currentPost.body);
-    if (newBody !== null) {
-        updatePost(newBody);
-    }
+    window.location.href = `/blogs/edit/${postId}`;
 }
 
 async function updatePost(newBody) {

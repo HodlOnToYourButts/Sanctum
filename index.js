@@ -197,7 +197,17 @@ app.get('/forums', (req, res) => {
   res.sendFile(__dirname + '/public/forums.html');
 });
 
-// Individual blog post view
+// Blog creation page
+app.get('/blogs/create', (req, res) => {
+  res.sendFile(__dirname + '/public/blog-edit.html');
+});
+
+// Blog edit page
+app.get('/blogs/edit/:id', (req, res) => {
+  res.sendFile(__dirname + '/public/blog-edit.html');
+});
+
+// Individual blog post view (must come after specific routes)
 app.get('/blogs/:id', (req, res) => {
   res.sendFile(__dirname + '/public/blog-post.html');
 });

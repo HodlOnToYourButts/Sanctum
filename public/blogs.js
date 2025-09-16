@@ -33,12 +33,18 @@ function showLoggedInState(user) {
     }
 
     document.getElementById('auth-section').innerHTML = authButtons;
+
+    // Show create blog button when logged in
+    document.getElementById('create-blog-btn').style.display = 'block';
 }
 
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
         '<a href="/login" class="auth-button">Login / Sign Up</a>';
+
+    // Hide create blog button when logged out
+    document.getElementById('create-blog-btn').style.display = 'none';
 }
 
 async function logout() {
@@ -113,11 +119,15 @@ function displayContentFeed(contentList) {
                         </div>
                     </div>
                     <div class="content-admin-actions">
-                        ${isModerator && !item.featured ? `
+                        ${isModerator ? (item.featured ? `
+                            <button class="admin-btn demote-btn" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
+                                ⭐ Demote
+                            </button>
+                        ` : `
                             <button class="admin-btn promote-btn" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
                                 ⭐ Promote
                             </button>
-                        ` : ''}
+                        `) : ''}
                         ${canEdit ? `
                             <button class="admin-btn edit-btn" onclick="editPost('${item._id}')" title="Edit post">
                                 ✏️ Edit
@@ -351,14 +361,32 @@ async function promoteToFrontPage(postId) {
     }
 }
 
+// Demote post from front page
+async function demoteFromFrontPage(postId) {
+    try {
+        const response = await fetch(`/api/content/${postId}/demote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Post removed from front page successfully!');
+            loadContentFeed(); // Refresh the feed
+        } else {
+            const error = await response.json();
+            alert(`Failed to demote post: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error demoting post:', error);
+        alert('Failed to demote post. Please try again.');
+    }
+}
+
 // Edit post
 function editPost(postId) {
-    // For now, redirect to a simple edit form
-    // Later this could be a modal or inline editor
-    const newBody = prompt('Edit post content:');
-    if (newBody !== null) {
-        updatePost(postId, newBody);
-    }
+    window.location.href = `/blogs/edit/${postId}`;
 }
 
 // Update post content
@@ -385,6 +413,11 @@ async function updatePost(postId, newBody) {
         console.error('Error updating post:', error);
         alert('Failed to update post. Please try again.');
     }
+}
+
+// Create new blog
+function createNewBlog() {
+    window.location.href = '/blogs/create';
 }
 
 // Check authentication status on page load
