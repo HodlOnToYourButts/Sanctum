@@ -189,21 +189,12 @@ app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/public/admin.html');
 });
 
-app.get('/b', (req, res) => {
+app.get('/blogs', (req, res) => {
   res.sendFile(__dirname + '/public/blogs.html');
 });
 
-app.get('/f', (req, res) => {
-  res.sendFile(__dirname + '/public/forums.html');
-});
-
-// Keep old routes for backwards compatibility
-app.get('/blogs', (req, res) => {
-  res.redirect('/b');
-});
-
 app.get('/forums', (req, res) => {
-  res.redirect('/f');
+  res.sendFile(__dirname + '/public/forums.html');
 });
 
 app.get('/api', (req, res) => {

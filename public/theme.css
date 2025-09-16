@@ -238,7 +238,7 @@ body::before {
 
 /* Content inside the terminal window */
 .content-item > * {
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     padding: 0 1rem 1rem;
 }
 
