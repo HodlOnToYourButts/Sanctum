@@ -30,18 +30,12 @@ function showLoggedInState(user) {
     }
 
     document.getElementById('auth-section').innerHTML = authButtons;
-
-    // Show create blog button when logged in
-    document.getElementById('create-blog-btn').style.display = 'block';
 }
 
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
         '<a href="/login" class="auth-button">Login / Sign Up</a>';
-
-    // Hide create blog button when logged out
-    document.getElementById('create-blog-btn').style.display = 'none';
 }
 
 async function logout() {
@@ -119,7 +113,7 @@ function displayContentFeed(contentList) {
                             By ${escapeHtml(item.author_name || 'Unknown')} •
                             ${new Date(item.created_at).toLocaleDateString()} •
                             ${item.type}
-                            ${item.featured ? '<span class="featured-badge">Featured</span>' : ''}
+                            ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
                         </div>
                     </div>
                     <div class="content-admin-actions">
@@ -155,7 +149,7 @@ function displayContentFeed(contentList) {
                     <div class="comment-actions">
                         ${item.allow_comments ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
-                                [MSG] ${item.comment_count || 0} comments
+                                ${item.comment_count || 0} comments
                             </button>
                         ` : ''}
                     </div>

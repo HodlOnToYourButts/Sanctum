@@ -108,7 +108,7 @@ async function loadPost() {
             By ${escapeHtml(currentPost.author_name || 'Unknown')} •
             ${new Date(currentPost.created_at).toLocaleDateString()} •
             ${currentPost.type}
-            ${currentPost.featured ? '<span class="featured-badge">Featured</span>' : ''}
+            ${currentPost.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
         `;
         document.getElementById('content-body').textContent = currentPost.body;
 

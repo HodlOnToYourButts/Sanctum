@@ -115,7 +115,7 @@ function displayContentFeed(contentList) {
                             By ${escapeHtml(item.author_name || 'Unknown')} •
                             ${new Date(item.created_at).toLocaleDateString()} •
                             ${item.type}
-                            ${item.featured ? '<span class="featured-badge">Featured</span>' : ''}
+                            ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
                         </div>
                     </div>
                     <div class="content-admin-actions">
@@ -151,7 +151,7 @@ function displayContentFeed(contentList) {
                     <div class="comment-actions">
                         ${item.allow_comments ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
-                                [MSG] ${item.comment_count || 0} comments
+                                ${item.comment_count || 0} comments
                             </button>
                         ` : ''}
                     </div>

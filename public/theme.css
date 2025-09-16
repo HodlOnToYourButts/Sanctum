@@ -292,13 +292,26 @@ body::before {
 }
 
 .featured-badge {
-    background: #ff6600;
-    color: #ffffff;
-    padding: 0.125rem 0.25rem;
-    font-size: 0.6rem;
-    border-radius: 2px;
+    background: #111111;
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.65rem;
+    border-radius: 0;
     margin-left: 0.5rem;
-    font-weight: bold;
+    font-weight: normal;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 3px #00ff41;
+}
+
+.featured-badge::before {
+    content: '[';
+    color: #00ff41;
+}
+
+.featured-badge::after {
+    content: ']';
+    color: #00ff41;
 }
 
 .content-title {
@@ -798,6 +811,27 @@ body::before {
 }
 
 .btn:hover {
+    background: #00ff41;
+    color: #000000;
+}
+
+.btn-create {
+    background: #000000;
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: normal;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Courier New', monospace;
+}
+
+.btn-create::before {
+    content: '[CREATE] ';
+}
+
+.btn-create:hover {
     background: #00ff41;
     color: #000000;
 }
