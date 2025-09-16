@@ -133,6 +133,14 @@ body::before {
     text-shadow: 0 0 3px #00ff41;
 }
 
+.nav-item.active::before {
+    content: '[';
+}
+
+.nav-item.active::after {
+    content: ']';
+}
+
 /* Container */
 .container {
     max-width: 1200px;
@@ -278,15 +286,6 @@ body::before {
 }
 
 /* Admin buttons for actions that stay on same page */
-.admin-btn-action::before {
-    content: '[';
-    color: inherit;
-}
-
-.admin-btn-action::after {
-    content: ']';
-    color: inherit;
-}
 
 /* Admin buttons for navigation to other pages */
 .admin-btn-nav::before {
