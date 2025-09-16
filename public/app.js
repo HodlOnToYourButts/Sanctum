@@ -253,11 +253,15 @@ function setContentType(type) {
         }
     }
 
-    // Update URL without page reload
-    const newUrl = type === 'all' ? '/' : `/${type}s`;
-    window.history.pushState({contentType: type}, '', newUrl);
+    // Update URL without page reload (keep at root)
+    window.history.pushState({contentType: type}, '', '/');
 
-    loadContentFeed();
+    // Load appropriate content
+    if (type === 'forum') {
+        loadForumCategories();
+    } else {
+        loadContentFeed();
+    }
 }
 
 function setSort(sort) {
@@ -437,20 +441,104 @@ function editPost(postId) {
 }
 
 // Create new blog
+async function loadForumCategories() {
+    try {
+        document.getElementById('content-loading').style.display = 'block';
+        document.getElementById('content-feed').style.display = 'none';
+
+        // Static categories (can be made dynamic later)
+        const categories = [
+            {
+                id: 'general',
+                title: 'General Discussion',
+                description: 'General topics and discussions about anything and everything.',
+                posts: 0,
+                lastActivity: null
+            },
+            {
+                id: 'announcements',
+                title: 'Announcements',
+                description: 'Important updates and announcements from the team.',
+                posts: 0,
+                lastActivity: null
+            },
+            {
+                id: 'support',
+                title: 'Support',
+                description: 'Get help with technical issues and questions.',
+                posts: 0,
+                lastActivity: null
+            },
+            {
+                id: 'feedback',
+                title: 'Feedback',
+                description: 'Share your thoughts and suggestions for improvements.',
+                posts: 0,
+                lastActivity: null
+            }
+        ];
+
+        // Get post counts for each category
+        for (let category of categories) {
+            try {
+                const response = await fetch(`/api/content/feed?type=forum&category=${category.id}`);
+                if (response.ok) {
+                    const posts = await response.json();
+                    category.posts = posts.length;
+                    if (posts.length > 0) {
+                        category.lastActivity = new Date(Math.max(...posts.map(p => new Date(p.created_at))));
+                    }
+                }
+            } catch (error) {
+                console.error(`Error loading posts for category ${category.id}:`, error);
+            }
+        }
+
+        displayForumCategories(categories);
+        document.getElementById('content-loading').style.display = 'none';
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        document.getElementById('content-loading').innerHTML =
+            `<div class="error">Failed to load categories: ${error.message}</div>`;
+    }
+}
+
+function displayForumCategories(categories) {
+    const container = document.getElementById('content-feed');
+    container.style.display = 'block';
+
+    if (categories.length === 0) {
+        container.innerHTML = '<p class="loading">No categories found.</p>';
+        return;
+    }
+
+    container.innerHTML = `<div class="category-grid">${categories.map(category => `
+        <div class="category-card" onclick="openCategory('${category.id}')">
+            <div class="category-title">${escapeHtml(category.title)}</div>
+            <div class="category-description">${escapeHtml(category.description)}</div>
+            <div class="category-stats">
+                <span>${category.posts} posts</span>
+                <span>${category.lastActivity ?
+                    'Last: ' + category.lastActivity.toLocaleDateString() :
+                    'No activity yet'}</span>
+            </div>
+        </div>
+    `).join('')}</div>`;
+}
+
+function openCategory(categoryId) {
+    // For now, just show an alert. Later this can navigate to category page
+    alert(`Opening category: ${categoryId}\n\nThis will be implemented to show forum posts in this category.`);
+}
+
 function createNewBlog() {
     window.location.href = '/blogs/create';
 }
 
 // Initialize content type from URL
 function initializeContentType() {
-    const path = window.location.pathname;
-    if (path === '/blogs') {
-        setContentType('blog');
-    } else if (path === '/forums') {
-        setContentType('forum');
-    } else {
-        setContentType('all');
-    }
+    // Always start with 'all' since we're staying on root
+    setContentType('all');
 }
 
 // Handle browser back/forward buttons

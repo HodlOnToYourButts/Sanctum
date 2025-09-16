@@ -717,7 +717,7 @@ body::before {
 }
 
 .no-comments::before {
-    content: '// NO MESSAGES FOUND //';
+    content: '// NO MESSAGES FOUND';
 }
 
 /* Forms */
