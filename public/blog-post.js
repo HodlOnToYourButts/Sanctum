@@ -49,10 +49,15 @@ function showLoggedOutState() {
     currentUser = null;
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
-        '<a href="/login" class="auth-button">Login / Sign Up</a>';
+        '<button class="auth-button" onclick="goToLogin()">Login</button>';
 
     updateCommentForm();
     updateAdminActions();
+}
+
+function goToLogin() {
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `/login?return=${returnUrl}`;
 }
 
 async function logout() {
@@ -160,7 +165,14 @@ function updateCommentForm() {
             <button onclick="submitComment()" class="btn-comment">Comment</button>
         `;
     } else {
-        formContent.innerHTML = '<p>Login to leave a comment</p>';
+        formContent.innerHTML = `
+            <div class="login-prompt">
+                <div class="login-prompt-content">
+                    <p>You must be logged in to leave a comment.</p>
+                    <button class="auth-button" onclick="goToLogin()">Login</button>
+                </div>
+            </div>
+        `;
     }
 }
 
@@ -177,12 +189,20 @@ function updateAdminActions() {
 
     let actionsHtml = '';
 
-    if (isModerator && !currentPost.featured) {
-        actionsHtml += `
-            <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage()" title="Promote to front page">
-                PROMOTE
-            </button>
-        `;
+    if (isModerator) {
+        if (currentPost.featured) {
+            actionsHtml += `
+                <button class="admin-btn admin-btn-action admin-btn-demote" onclick="demoteFromFrontPage()" title="Remove from front page">
+                    DEMOTE
+                </button>
+            `;
+        } else {
+            actionsHtml += `
+                <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage()" title="Promote to front page">
+                    PROMOTE
+                </button>
+            `;
+        }
     }
 
     if (canEdit) {
@@ -234,17 +254,47 @@ async function vote(direction) {
 
 function toggleComments() {
     const commentsSection = document.getElementById('comments-section');
-    if (commentsSection.style.display === 'none') {
-        commentsSection.style.display = 'block';
-    } else {
+    // Since comments are now visible by default, we need to check the computed style or use a different approach
+    const isVisible = commentsSection.style.display !== 'none';
+    if (isVisible) {
         commentsSection.style.display = 'none';
+    } else {
+        commentsSection.style.display = 'block';
     }
 }
 
 async function loadComments() {
-    // Implementation would be similar to the blogs.js loadComments function
-    // For now, just show placeholder
-    document.getElementById('comments-list').innerHTML = '<p>Comments loading...</p>';
+    try {
+        const response = await fetch(`/api/content/${postId}/comments`);
+        if (!response.ok) {
+            throw new Error('Failed to load comments');
+        }
+
+        const comments = await response.json();
+        const commentsList = document.getElementById('comments-list');
+
+        if (comments.length === 0) {
+            commentsList.innerHTML = '<p class="no-comments-blog"></p>';
+            return;
+        }
+
+        commentsList.innerHTML = comments.map(comment => {
+            const commentDate = new Date(comment.created_at);
+            return `
+                <div class="comment">
+                    <div class="comment-header">
+                        <strong>${escapeHtml(comment.author_name)}</strong>
+                        <span class="comment-date" title="${commentDate.toLocaleString()}">${getRelativeTime(commentDate)}</span>
+                    </div>
+                    <div class="comment-content">${escapeHtml(comment.content)}</div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        document.getElementById('comments-list').innerHTML =
+            '<p class="error">Failed to load comments.</p>';
+    }
 }
 
 async function submitComment() {
@@ -254,16 +304,24 @@ async function submitComment() {
     if (!content) return;
 
     try {
+        const requestBody = {
+            content: content,
+            author_name: currentUser.name
+        };
+
+        // Only add email if it's a valid email format
+        if (currentUser.email && typeof currentUser.email === 'string' && currentUser.email.trim() && /\S+@\S+\.\S+/.test(currentUser.email)) {
+            requestBody.author_email = currentUser.email;
+        }
+
+        console.log('Submitting comment with body:', requestBody);
+
         const response = await fetch(`/api/content/${postId}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                content: content,
-                author_name: currentUser.name,
-                author_email: currentUser.email
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (response.ok) {
@@ -271,7 +329,9 @@ async function submitComment() {
             await loadComments();
             await loadPost(); // Refresh to update comment count
         } else {
-            throw new Error('Failed to submit comment');
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            console.error('Comment submission failed:', response.status, errorData);
+            throw new Error(errorData.error || `Failed to submit comment (${response.status})`);
         }
     } catch (error) {
         console.error('Error submitting comment:', error);
@@ -301,8 +361,30 @@ async function promoteToFrontPage() {
     }
 }
 
+async function demoteFromFrontPage() {
+    try {
+        const response = await fetch(`/api/content/${postId}/demote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Post removed from front page successfully!');
+            await loadPost(); // Refresh to update featured status
+        } else {
+            const error = await response.json();
+            alert(`Failed to demote post: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error demoting post:', error);
+        alert('Failed to demote post. Please try again.');
+    }
+}
+
 function editPost() {
-    window.location.href = `/blogs/edit/${postId}`;
+    window.location.href = `/blog/edit/${postId}`;
 }
 
 async function updatePost(newBody) {
@@ -334,6 +416,18 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function getRelativeTime(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
+    return `${Math.floor(diffInSeconds / 31536000)}y ago`;
 }
 
 // Initialize page

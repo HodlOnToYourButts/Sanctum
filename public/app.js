@@ -30,15 +30,17 @@ function showLoggedInState(user) {
     }
 
     document.getElementById('auth-section').innerHTML = authButtons;
-
-    // Update create blog button visibility
-    updateNavActiveState();
 }
 
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
-        '<a href="/login" class="auth-button">Login</a>';
+        '<button class="auth-button" onclick="goToLogin()">Login</button>';
+}
+
+function goToLogin() {
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `/login?return=${returnUrl}`;
 }
 
 async function logout() {
@@ -72,19 +74,12 @@ async function logout() {
 // Site title is now hardcoded, no dynamic loading needed
 
 // Global state
-let currentContentType = 'all';
 let currentSort = 'new';
 let currentUser = null;
 
 async function loadContentFeed() {
     try {
-        // Don't load content feed for forum type, use loadForumCategories instead
-        if (currentContentType === 'forum') {
-            loadForumCategories();
-            return;
-        }
-
-        const response = await fetch(`/api/content/feed?type=${currentContentType}&sort=${currentSort}`);
+        const response = await fetch(`/api/content/feed?type=all&sort=${currentSort}`);
         if (!response.ok) {
             throw new Error('Failed to load content feed');
         }
@@ -114,31 +109,15 @@ function displayContentFeed(contentList) {
         const canEdit = isAuthor || isModerator;
 
         return `
-            <div class="content-item">
+            <div class="content-item content-item-${item.type}">
                 <div class="content-header-item">
                     <div>
                         <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
                         <div class="content-meta">
+                            <span class="content-type-badge content-type-${item.type}">${getContentTypeLabel(item.type)}</span>
                             By ${escapeHtml(item.author_name || 'Unknown')} •
-                            ${new Date(item.created_at).toLocaleDateString()} •
-                            ${item.type}
+                            ${new Date(item.created_at).toLocaleDateString()}
                         </div>
-                    </div>
-                    <div class="content-admin-actions">
-                        ${isModerator ? (item.featured ? `
-                            <button class="admin-btn admin-btn-action admin-btn-demote" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
-                                DEMOTE
-                            </button>
-                        ` : `
-                            <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
-                                PROMOTE
-                            </button>
-                        `) : ''}
-                        ${canEdit ? `
-                            <button class="admin-btn admin-btn-nav" onclick="editPost('${item._id}')" title="Edit post">
-                                Edit
-                            </button>
-                        ` : ''}
                     </div>
                 </div>
                 <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
@@ -157,21 +136,21 @@ function displayContentFeed(contentList) {
                     <div class="comment-actions">
                         ${item.allow_comments ? `
                             <button class="comment-btn" onclick="toggleComments('${item._id}')">
-                                ${item.comment_count || 0} comments
+                                ${getCommentLabel(item.type, item.comment_count || 0)}
                             </button>
                         ` : ''}
                     </div>
                 </div>
                 ${item.allow_comments ? `
-                    <div id="comments-${item._id}" class="comments-section" style="display: ${openComments.has(item._id) ? 'block' : 'none'};">
+                    <div id="comments-${item._id}" class="comments-section" data-content-type="${item.type}" style="display: ${openComments.has(item._id) ? 'block' : 'none'};">
                         <div class="comment-form">
                             ${currentUser ? `
-                                <textarea id="comment-text-${item._id}" placeholder="Add a comment..." rows="3"></textarea>
-                                <button onclick="submitComment('${item._id}')" class="btn-comment">Comment</button>
-                            ` : '<p>Login to leave a comment</p>'}
+                                <textarea id="comment-text-${item._id}" placeholder="Add a ${getCommentType(item.type)}..." rows="3"></textarea>
+                                <button onclick="submitComment('${item._id}')" class="btn-comment">${getCommentButtonLabel(item.type)}</button>
+                            ` : `<div class=\"login-prompt\"><div class=\"login-prompt-content\"><p>You must be logged in to leave a ${getCommentType(item.type)}.</p><button class=\"auth-button\" onclick=\"goToLogin()\">Login</button></div></div>`}
                         </div>
                         <div id="comments-list-${item._id}" class="comments-list">
-                            Loading comments...
+                            Loading ${getCommentType(item.type)}s...
                         </div>
                     </div>
                 ` : ''}
@@ -183,9 +162,60 @@ function displayContentFeed(contentList) {
     openComments.forEach(contentId => {
         const commentsSection = document.getElementById(`comments-${contentId}`);
         if (commentsSection) {
-            loadComments(contentId);
+            const contentType = commentsSection.dataset.contentType || 'blog';
+            loadComments(contentId, contentType);
         }
     });
+}
+
+// Content type configuration for extensibility
+function getContentTypeLabel(type) {
+    const typeLabels = {
+        'blog': 'Blog',
+        'forum': 'Forum',
+        'event': 'Event',
+        'site': 'Site',
+        'game': 'Game',
+        'project': 'Project',
+        'tutorial': 'Tutorial',
+        'announcement': 'Announcement'
+    };
+    return typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+function getCommentType(type) {
+    const commentTypes = {
+        'blog': 'comment',
+        'forum': 'reply',
+        'event': 'comment',
+        'site': 'review',
+        'game': 'comment',
+        'project': 'comment',
+        'tutorial': 'comment',
+        'announcement': 'comment'
+    };
+    return commentTypes[type] || 'comment';
+}
+
+function getCommentLabel(type, count) {
+    const commentType = getCommentType(type);
+    let pluralType = commentType;
+
+    if (count !== 1) {
+        // Handle irregular plurals
+        if (commentType === 'reply') {
+            pluralType = 'replies';
+        } else {
+            pluralType = commentType + 's';
+        }
+    }
+
+    return `${count} ${pluralType}`;
+}
+
+function getCommentButtonLabel(type) {
+    const commentType = getCommentType(type);
+    return commentType.charAt(0).toUpperCase() + commentType.slice(1);
 }
 
 // Track user votes locally for undo functionality
@@ -238,38 +268,6 @@ function getUserVote(contentId) {
     return userVotes[contentId] || null;
 }
 
-function setContentType(type) {
-    currentContentType = type;
-
-    // Update nav active state
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.content === type) {
-            item.classList.add('active');
-        }
-    });
-
-    // Show/hide create blog button based on content type
-    const createBlogBtn = document.getElementById('create-blog-btn');
-    if (createBlogBtn) {
-        if (type === 'blog' && currentUser) {
-            createBlogBtn.style.display = 'block';
-        } else {
-            createBlogBtn.style.display = 'none';
-        }
-    }
-
-    // Update URL without page reload (keep at root)
-    window.history.pushState({contentType: type}, '', '/');
-
-    // Load appropriate content
-    if (type === 'forum') {
-        loadForumCategories();
-    } else {
-        loadContentFeed();
-    }
-}
-
 function setSort(sort) {
     currentSort = sort;
 
@@ -307,14 +305,15 @@ async function toggleComments(contentId) {
     if (commentsSection.style.display === 'none') {
         commentsSection.style.display = 'block';
         openComments.add(contentId);
-        await loadComments(contentId);
+        const contentType = commentsSection.dataset.contentType || 'blog';
+        await loadComments(contentId, contentType);
     } else {
         commentsSection.style.display = 'none';
         openComments.delete(contentId);
     }
 }
 
-async function loadComments(contentId) {
+async function loadComments(contentId, contentType = 'blog') {
     try {
         const response = await fetch(`/api/content/${contentId}/comments`);
         if (!response.ok) {
@@ -325,7 +324,8 @@ async function loadComments(contentId) {
         const commentsList = document.getElementById(`comments-list-${contentId}`);
 
         if (comments.length === 0) {
-            commentsList.innerHTML = '<p class="no-comments">No comments yet. Be the first to comment!</p>';
+            const noCommentsClass = contentType === 'forum' ? 'no-replies-forum' : 'no-comments-blog';
+            commentsList.innerHTML = `<p class="${noCommentsClass}"></p>`;
             return;
         }
 
@@ -390,9 +390,27 @@ async function submitComment(contentId) {
     }
 }
 
-// View full post
+// View full post - route based on content type
 function viewFullPost(postId) {
-    window.location.href = `/blogs/${postId}`;
+    // For now, determine content type by checking against current loaded content
+    // In a more robust implementation, this could be passed as a parameter
+    const contentFeed = document.getElementById('content-feed');
+    const contentItems = contentFeed.querySelectorAll('.content-item');
+
+    for (let item of contentItems) {
+        if (item.innerHTML.includes(postId)) {
+            if (item.classList.contains('content-item-forum')) {
+                window.location.href = `/forum/view/${postId}`;
+                return;
+            } else if (item.classList.contains('content-item-blog')) {
+                window.location.href = `/blog/view/${postId}`;
+                return;
+            }
+        }
+    }
+
+    // Default fallback to blog view
+    window.location.href = `/blog/view/${postId}`;
 }
 
 // Promote post to front page
@@ -443,144 +461,13 @@ async function demoteFromFrontPage(postId) {
 
 // Edit post
 function editPost(postId) {
-    window.location.href = `/blogs/edit/${postId}`;
-}
-
-// Create new blog
-async function loadForumCategories() {
-    try {
-        document.getElementById('content-loading').style.display = 'block';
-        document.getElementById('content-feed').style.display = 'none';
-
-        // Static categories (can be made dynamic later)
-        const categories = [
-            {
-                id: 'general',
-                title: 'General Discussion',
-                description: 'General topics and discussions about anything and everything.',
-                posts: 0,
-                lastActivity: null
-            },
-            {
-                id: 'announcements',
-                title: 'Announcements',
-                description: 'Important updates and announcements from the team.',
-                posts: 0,
-                lastActivity: null
-            },
-            {
-                id: 'support',
-                title: 'Support',
-                description: 'Get help with technical issues and questions.',
-                posts: 0,
-                lastActivity: null
-            },
-            {
-                id: 'feedback',
-                title: 'Feedback',
-                description: 'Share your thoughts and suggestions for improvements.',
-                posts: 0,
-                lastActivity: null
-            }
-        ];
-
-        // Get post counts for each category
-        for (let category of categories) {
-            try {
-                const response = await fetch(`/api/content/feed?type=forum&category=${category.id}`);
-                if (response.ok) {
-                    const posts = await response.json();
-                    category.posts = posts.length;
-                    if (posts.length > 0) {
-                        category.lastActivity = new Date(Math.max(...posts.map(p => new Date(p.created_at))));
-                    }
-                }
-            } catch (error) {
-                console.error(`Error loading posts for category ${category.id}:`, error);
-            }
-        }
-
-        displayForumCategories(categories);
-        document.getElementById('content-loading').style.display = 'none';
-    } catch (error) {
-        console.error('Error loading categories:', error);
-        document.getElementById('content-loading').innerHTML =
-            `<div class="error">Failed to load categories: ${error.message}</div>`;
-    }
-}
-
-function displayForumCategories(categories) {
-    const container = document.getElementById('content-feed');
-    container.style.display = 'block';
-
-    if (categories.length === 0) {
-        container.innerHTML = '<p class="loading">No categories found.</p>';
-        return;
-    }
-
-    container.innerHTML = `<div class="category-grid">${categories.map(category => `
-        <div class="category-card" onclick="openCategory('${category.id}')">
-            <div class="category-title">${escapeHtml(category.title)}</div>
-            <div class="category-description">${escapeHtml(category.description)}</div>
-            <div class="category-stats">
-                <span>${category.posts} posts</span>
-                <span>${category.lastActivity ?
-                    'Last: ' + category.lastActivity.toLocaleDateString() :
-                    'No activity yet'}</span>
-            </div>
-        </div>
-    `).join('')}</div>`;
-}
-
-function openCategory(categoryId) {
-    // For now, just show an alert. Later this can navigate to category page
-    alert(`Opening category: ${categoryId}\n\nThis will be implemented to show forum posts in this category.`);
-}
-
-function createNewBlog() {
-    window.location.href = '/blogs/create';
-}
-
-// Initialize content type from URL
-function initializeContentType() {
-    // Always start with 'all' since we're staying on root
-    setContentType('all');
-}
-
-// Handle browser back/forward buttons
-window.addEventListener('popstate', (event) => {
-    if (event.state && event.state.contentType) {
-        currentContentType = event.state.contentType;
-        updateNavActiveState();
-        loadContentFeed();
-    } else {
-        initializeContentType();
-    }
-});
-
-function updateNavActiveState() {
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.content === currentContentType) {
-            item.classList.add('active');
-        }
-    });
-
-    // Show/hide create blog button
-    const createBlogBtn = document.getElementById('create-blog-btn');
-    if (createBlogBtn) {
-        if (currentContentType === 'blog' && currentUser) {
-            createBlogBtn.style.display = 'block';
-        } else {
-            createBlogBtn.style.display = 'none';
-        }
-    }
+    window.location.href = `/blog/edit/${postId}`;
 }
 
 // Check authentication status on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
-    initializeContentType();
+    loadContentFeed();
 
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.addEventListener('click', () => {

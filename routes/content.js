@@ -1,8 +1,14 @@
 const express = require('express');
 const Joi = require('joi');
 const database = require('../lib/database');
-const { requireOidcAuth } = require('../lib/oidc-auth');
 const winston = require('winston');
+
+// Use bypass auth in development, OIDC in production
+const authModule = process.env.BYPASS_OIDC === 'true'
+  ? require('../lib/bypass-auth')
+  : require('../lib/oidc-auth');
+
+const { requireOidcAuth } = authModule;
 
 const logger = winston.createLogger({
   level: 'info',
@@ -37,12 +43,14 @@ const blogSchema = Joi.object({
 
 const forumSchema = Joi.object({
   type: Joi.string().valid('forum').required(),
+  category: Joi.string().valid('general-discussion', 'announcements', 'support', 'feedback').required(),
   title: Joi.string().required(),
   body: Joi.string().required(),
   tags: Joi.array().items(Joi.string()).default([]),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
   allow_comments: Joi.boolean().default(true),
-  promoted: Joi.boolean().default(false)
+  promoted: Joi.boolean().default(false),
+  pinned: Joi.boolean().default(false)
 });
 
 const contentSchema = Joi.alternatives().try(pageSchema, blogSchema, forumSchema);
@@ -103,7 +111,7 @@ router.get('/feed', async (req, res) => {
   try {
     await database.connect();
     const db = database.getDb();
-    const { type, sort = 'new', limit = 20, skip = 0 } = req.query;
+    const { type, category, sort = 'new', limit = 20, skip = 0 } = req.query;
 
     // Simplified selector - just get all content and filter in JavaScript
     const selector = {
@@ -128,7 +136,14 @@ router.get('/feed', async (req, res) => {
         // Filter by type and promotion status
         if (type && type !== 'all') {
           // For specific type pages (/blogs, /forums), show all published content of that type
-          return doc.type === type;
+          if (doc.type !== type) return false;
+
+          // Additional category filtering for forum posts
+          if (type === 'forum' && category && doc.category !== category) {
+            return false;
+          }
+
+          return true;
         }
         // For homepage ('all'), only show explicitly featured content
         if (type === 'all') {
@@ -139,6 +154,7 @@ router.get('/feed', async (req, res) => {
       .map(doc => ({
         _id: doc._id,
         type: doc.type,
+        category: doc.category, // Include category for forum posts
         title: doc.title,
         body: doc.body ? (doc.body.substring(0, 300) + (doc.body.length > 300 ? '...' : '')) : '',
         created_at: doc.created_at,
@@ -149,7 +165,8 @@ router.get('/feed', async (req, res) => {
         votes: doc.votes || { up: 0, down: 0, score: 0 },
         allow_comments: doc.allow_comments,
         comment_count: 0, // Will be calculated below
-        featured: doc.featured || false
+        featured: doc.featured || false,
+        pinned: doc.pinned || false
       }));
 
     // Sort items
@@ -160,20 +177,22 @@ router.get('/feed', async (req, res) => {
       items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
-    // Calculate comment counts for items that allow comments
+    // Calculate comment/reply counts for items that allow comments
     for (let item of items) {
       if (item.allow_comments && ['blog', 'forum'].includes(item.type)) {
         try {
-          const commentResult = await db.find({
+          // Use different types for different content types
+          const responseType = item.type === 'forum' ? 'reply' : 'comment';
+          const responseResult = await db.find({
             selector: {
-              type: 'comment',
+              type: responseType,
               content_id: item._id,
               status: { $in: ['approved', 'pending'] }
             }
           });
-          item.comment_count = commentResult.docs.length;
+          item.comment_count = responseResult.docs.length;
         } catch (error) {
-          logger.error('Error counting comments', { contentId: item._id, error: error.message });
+          logger.error('Error counting responses', { contentId: item._id, error: error.message });
           item.comment_count = 0;
         }
       }
@@ -204,6 +223,24 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
+    // Calculate comment/reply count for this content
+    if (content.allow_comments && ['blog', 'forum'].includes(content.type)) {
+      try {
+        const responseType = content.type === 'forum' ? 'reply' : 'comment';
+        const responseResult = await db.find({
+          selector: {
+            type: responseType,
+            content_id: content._id,
+            status: { $in: ['approved', 'pending'] }
+          }
+        });
+        content.comment_count = responseResult.docs.length;
+      } catch (error) {
+        logger.error('Error counting responses for single content', { contentId: content._id, error: error.message });
+        content.comment_count = 0;
+      }
+    }
+
     res.json(content);
   } catch (error) {
     if (error.statusCode === 404) {
@@ -229,7 +266,8 @@ router.post('/', requireOidcAuth(), async (req, res) => {
       author: {
         id: req.user.id,
         name: req.user.name,
-        email: req.user.email
+        email: req.user.email,
+        roles: req.user.roles || []
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -343,7 +381,7 @@ router.delete('/:id', requireOidcAuth(), async (req, res) => {
 const commentSchema = Joi.object({
   content: Joi.string().required().min(1).max(1000),
   author_name: Joi.string().required().min(1).max(100),
-  author_email: Joi.string().email().optional()
+  author_email: Joi.string().email({ tlds: { allow: false } }).optional() // Allow any TLD including .local
 });
 
 // Get comments for a specific blog post
@@ -665,6 +703,243 @@ router.post('/:id/demote', requireOidcAuth(), async (req, res) => {
       logger.error('Error demoting content', { error: error.message });
       res.status(500).json({ error: 'Failed to demote content' });
     }
+  }
+});
+
+// Pin content (admin/moderator only)
+router.post('/:id/pin', requireOidcAuth(), async (req, res) => {
+  try {
+    // Check if user has permission to pin
+    const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
+    if (!isModerator) {
+      return res.status(403).json({ error: 'Only admins and moderators can pin content' });
+    }
+
+    const db = database.getDb();
+    const content = await db.get(req.params.id);
+
+    // Update the content to mark as pinned
+    content.pinned = true;
+    content.pinned_at = new Date().toISOString();
+    content.pinned_by = req.user.id;
+
+    await db.insert(content);
+
+    logger.info('Content pinned', {
+      contentId: req.params.id,
+      pinnedBy: req.user.id
+    });
+
+    res.json({ message: 'Content pinned successfully' });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error pinning content', { error: error.message });
+      res.status(500).json({ error: 'Failed to pin content' });
+    }
+  }
+});
+
+// Unpin content (admin/moderator only)
+router.post('/:id/unpin', requireOidcAuth(), async (req, res) => {
+  try {
+    // Check if user has permission to unpin
+    const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
+    if (!isModerator) {
+      return res.status(403).json({ error: 'Only admins and moderators can unpin content' });
+    }
+
+    const db = database.getDb();
+    const content = await db.get(req.params.id);
+
+    // Update the content to remove pinned status
+    content.pinned = false;
+    delete content.pinned_at;
+    delete content.pinned_by;
+
+    await db.insert(content);
+
+    logger.info('Content unpinned', {
+      contentId: req.params.id,
+      unpinnedBy: req.user.id
+    });
+
+    res.json({ message: 'Content unpinned successfully' });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Content not found' });
+    } else {
+      logger.error('Error unpinning content', { error: error.message });
+      res.status(500).json({ error: 'Failed to unpin content' });
+    }
+  }
+});
+
+// Forum reply schema - different from comments
+const replySchema = Joi.object({
+  content: Joi.string().required().min(1).max(2000), // Longer replies allowed
+  author_name: Joi.string().required().min(1).max(100),
+  author_email: Joi.string().email({ tlds: { allow: false } }).optional(), // Allow any TLD including .local
+  author_roles: Joi.array().items(Joi.string()).optional()
+});
+
+// Get replies for a specific forum post
+router.get('/:id/replies', async (req, res) => {
+  try {
+    await database.connect();
+    const db = database.getDb();
+
+    // Check if the content exists and is a forum post
+    const content = await db.get(req.params.id);
+    if (content.type !== 'forum') {
+      return res.status(400).json({ error: 'Replies only available for forum posts' });
+    }
+
+    if (!content.allow_comments) {
+      return res.status(403).json({ error: 'Replies are disabled for this post' });
+    }
+
+    // Find replies for this forum post
+    const result = await db.find({
+      selector: {
+        type: 'reply',
+        content_id: req.params.id
+      },
+      limit: 1000
+    });
+
+    // Sort replies in JavaScript and only show approved/pending
+    let replies = result.docs
+      .filter(doc => doc.status === 'approved' || doc.status === 'pending')
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    res.json(replies);
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Forum post not found' });
+    } else {
+      logger.error('Error fetching replies', {
+        contentId: req.params.id,
+        error: error.message,
+        stack: error.stack
+      });
+      res.status(500).json({ error: 'Failed to fetch replies' });
+    }
+  }
+});
+
+// Add a reply to a forum post
+router.post('/:id/replies', async (req, res) => {
+  try {
+    const { error, value } = replySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    await database.connect();
+    const db = database.getDb();
+
+    // Check if the content exists and is a forum post
+    const content = await db.get(req.params.id);
+    if (content.type !== 'forum') {
+      return res.status(400).json({ error: 'Replies only available for forum posts' });
+    }
+
+    if (!content.allow_comments) {
+      return res.status(403).json({ error: 'Replies are disabled for this post' });
+    }
+
+    const reply = {
+      type: 'reply',
+      content_id: req.params.id,
+      content: value.content,
+      author_name: value.author_name,
+      author_email: value.author_email,
+      author_roles: value.author_roles || [],
+      status: 'approved', // Forum replies can be auto-approved
+      created_at: new Date().toISOString(),
+      ip_address: req.ip || req.connection.remoteAddress
+    };
+
+    const result = await db.insert(reply);
+    reply._id = result.id;
+    reply._rev = result.rev;
+
+    logger.info('Reply created', {
+      replyId: result.id,
+      contentId: req.params.id,
+      author: value.author_name
+    });
+
+    res.status(201).json(reply);
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Forum post not found' });
+    } else {
+      logger.error('Error creating reply', { error: error.message });
+      res.status(500).json({ error: 'Failed to create reply' });
+    }
+  }
+});
+
+// Get user statistics (post count, join date, etc.)
+router.get('/user/:identifier/stats', async (req, res) => {
+  try {
+    await database.connect();
+    const db = database.getDb();
+
+    const identifier = req.params.identifier;
+
+    // Count posts by this user (both blog and forum posts)
+    const postResult = await db.find({
+      selector: {
+        type: { $in: ['blog', 'forum'] },
+        $or: [
+          { 'author.name': identifier },
+          { 'author_name': identifier }
+        ]
+      }
+    });
+
+    // Count replies by this user
+    const replyResult = await db.find({
+      selector: {
+        type: 'reply',
+        author_name: identifier
+      }
+    });
+
+    // Count comments by this user
+    const commentResult = await db.find({
+      selector: {
+        type: 'comment',
+        author_name: identifier
+      }
+    });
+
+    // Find the earliest content created by this user to estimate join date
+    const allUserContent = [...postResult.docs, ...replyResult.docs, ...commentResult.docs];
+    let joinDate = null;
+    if (allUserContent.length > 0) {
+      const earliestContent = allUserContent.reduce((earliest, current) => {
+        return new Date(current.created_at) < new Date(earliest.created_at) ? current : earliest;
+      });
+      joinDate = earliestContent.created_at;
+    }
+
+    const stats = {
+      posts: postResult.docs.length,
+      replies: replyResult.docs.length,
+      comments: commentResult.docs.length,
+      total_activity: postResult.docs.length + replyResult.docs.length + commentResult.docs.length,
+      join_date: joinDate
+    };
+
+    res.json(stats);
+  } catch (error) {
+    logger.error('Error fetching user stats', { identifier: req.params.identifier, error: error.message });
+    res.status(500).json({ error: 'Failed to fetch user statistics' });
   }
 });
 

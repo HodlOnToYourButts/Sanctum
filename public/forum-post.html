@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="post-title">Sanctum | Forum Post</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text x='50' y='35' text-anchor='middle' fill='%2300ff41' font-family='monospace' font-size='20' font-weight='bold'>S</text><text x='20' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>01</text><text x='50' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>10</text><text x='80' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>11</text><text x='35' y='80' fill='%2300ff41' font-family='monospace' font-size='8'>01</text><text x='65' y='80' fill='%2300ff41' font-family='monospace' font-size='8'>10</text></svg>">
+    <link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <button class="logo" onclick="window.location.href='/'">Sanctum</button>
+                <nav class="nav-menu">
+                    <a href="/blog" class="nav-item">Blogs</a>
+                    <a href="/forum" class="nav-item active">Forums</a>
+                </nav>
+            </div>
+            <div class="user-auth-section">
+                <div id="user-info" class="user-info-header">
+                    <span id="user-name-header"></span>
+                </div>
+                <div id="auth-section">
+                    <div id="loading" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="loading-container" class="loading">Loading forum post...</div>
+
+        <div id="post-container" style="display: none;">
+            <!-- Forum Post -->
+            <div class="forum-post-container">
+                <div class="forum-post-header">
+                    <div class="forum-post-title-section">
+                        <a href="#" class="forum-post-category" id="post-category-header"></a>
+                        <h1 id="post-title-text" class="forum-post-title"></h1>
+                    </div>
+                    <div class="forum-post-header-right">
+                        <div class="post-voting">
+                            <button id="upvote-btn" class="vote-btn" onclick="votePost('up')">
+                                ↑ <span id="upvote-count">0</span>
+                            </button>
+                            <span id="vote-score" class="vote-score">0</span>
+                            <button id="downvote-btn" class="vote-btn" onclick="votePost('down')">
+                                ↓ <span id="downvote-count">0</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="forum-post-content">
+                    <!-- Author Info Sidebar -->
+                    <div class="forum-author-info">
+                        <div class="author-avatar">
+                            <span class="avatar-placeholder" id="author-avatar">👤</span>
+                        </div>
+                        <div class="author-details">
+                            <div class="author-name" id="author-name">Loading...</div>
+                            <div class="author-role" id="author-role"></div>
+                            <div class="author-stats">
+                                <div class="author-stat">
+                                    <span class="stat-label">Posts:</span>
+                                    <span class="stat-value" id="author-posts">--</span>
+                                </div>
+                                <div class="author-stat">
+                                    <span class="stat-label">Joined:</span>
+                                    <span class="stat-value" id="author-joined">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="forum-post-main">
+                        <div class="post-body" id="post-content">
+                            Loading post content...
+                        </div>
+
+                        <div class="post-signature" id="post-signature" style="display: none;">
+                            <!-- User signature if any -->
+                        </div>
+
+                        <!-- Post Meta Bar at bottom of forum-post-main -->
+                        <div class="post-meta-bar">
+                            <div class="post-edit-action">
+                                <span id="post-edit-action">
+                                    <!-- Edit action will be populated here -->
+                                </span>
+                            </div>
+                            <div class="post-date-info">
+                                <span class="post-date" id="post-date"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments/Replies Section -->
+            <div id="comments-section" class="forum-replies-section" style="display: none;">
+                <div class="replies-header">
+                    <h3 class="replies-title">
+                        <span id="post-actions">
+                            <!-- Forum post actions will be populated here instead of reply count -->
+                        </span>
+                    </h3>
+                </div>
+
+                <!-- Reply Form -->
+                <div class="reply-form-container" id="comment-form" style="display: none;">
+                    <div class="reply-form">
+                        <div class="form-header">
+                            <span class="form-title">Post Reply</span>
+                        </div>
+                        <textarea id="comment-text" placeholder="Enter your reply..." rows="5"></textarea>
+                        <div class="form-actions">
+                            <button onclick="submitComment()" class="btn-reply">Post Reply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Replies List -->
+                <div id="comments-list" class="replies-list">
+                    <div class="loading">Loading replies...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-container" style="display: none; color: red; text-align: center; margin: 2rem;">
+            <p id="error-message"></p>
+            <p><a href="/forums">← Back to Forums</a></p>
+        </div>
+    </div>
+
+    <script src="/forum-post.js"></script>
+</body>
+</html>

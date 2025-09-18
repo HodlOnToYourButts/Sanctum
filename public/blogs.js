@@ -41,10 +41,15 @@ function showLoggedInState(user) {
 function showLoggedOutState() {
     document.getElementById('user-info').classList.remove('show');
     document.getElementById('auth-section').innerHTML =
-        '<a href="/login" class="auth-button">Login / Sign Up</a>';
+        '<button class="auth-button" onclick="goToLogin()">Login</button>';
 
     // Hide create blog button when logged out
     document.getElementById('create-blog-btn').style.display = 'none';
+}
+
+function goToLogin() {
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `/login?return=${returnUrl}`;
 }
 
 async function logout() {
@@ -118,22 +123,6 @@ function displayContentFeed(contentList) {
                             ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
                         </div>
                     </div>
-                    <div class="content-admin-actions">
-                        ${isModerator ? (item.featured ? `
-                            <button class="admin-btn admin-btn-action admin-btn-demote" onclick="demoteFromFrontPage('${item._id}')" title="Remove from front page">
-                                DEMOTE
-                            </button>
-                        ` : `
-                            <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage('${item._id}')" title="Promote to front page">
-                                PROMOTE
-                            </button>
-                        `) : ''}
-                        ${canEdit ? `
-                            <button class="admin-btn admin-btn-nav" onclick="editPost('${item._id}')" title="Edit post">
-                                Edit
-                            </button>
-                        ` : ''}
-                    </div>
                 </div>
                 <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
                 <div class="content-actions">
@@ -162,7 +151,7 @@ function displayContentFeed(contentList) {
                             ${currentUser ? `
                                 <textarea id="comment-text-${item._id}" placeholder="Add a comment..." rows="3"></textarea>
                                 <button onclick="submitComment('${item._id}')" class="btn-comment">Comment</button>
-                            ` : '<p>Login to leave a comment</p>'}
+                            ` : '<div class=\"login-prompt\"><div class=\"login-prompt-content\"><p>You must be logged in to leave a comment.</p><button class=\"auth-button\" onclick=\"goToLogin()\">Login</button></div></div>'}
                         </div>
                         <div id="comments-list-${item._id}" class="comments-list">
                             Loading comments...
@@ -219,16 +208,8 @@ function getUserVote(contentId) {
 }
 
 function setSort(sort) {
-    currentSort = sort;
-
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.sort === sort) {
-            btn.classList.add('active');
-        }
-    });
-
-    loadContentFeed();
+    const sortPath = sort === 'top' ? '/top' : '';
+    window.location.href = `/blog${sortPath}`;
 }
 
 function escapeHtml(text) {
@@ -270,7 +251,7 @@ async function loadComments(contentId) {
         const commentsList = document.getElementById(`comments-list-${contentId}`);
 
         if (comments.length === 0) {
-            commentsList.innerHTML = '<p class="no-comments">No comments yet. Be the first to comment!</p>';
+            commentsList.innerHTML = '<p class="no-comments-blog"></p>';
             return;
         }
 
@@ -335,7 +316,7 @@ async function submitComment(contentId) {
 
 // View full post
 function viewFullPost(postId) {
-    window.location.href = `/blogs/${postId}`;
+    window.location.href = `/blog/view/${postId}`;
 }
 
 // Promote post to front page
@@ -386,7 +367,7 @@ async function demoteFromFrontPage(postId) {
 
 // Edit post
 function editPost(postId) {
-    window.location.href = `/blogs/edit/${postId}`;
+    window.location.href = `/blog/edit/${postId}`;
 }
 
 // Update post content
@@ -417,11 +398,34 @@ async function updatePost(postId, newBody) {
 
 // Create new blog
 function createNewBlog() {
-    window.location.href = '/blogs/create';
+    window.location.href = '/blog/create';
+}
+
+// URL routing function
+function initializeView() {
+    const path = window.location.pathname;
+    const pathParts = path.split('/').filter(part => part);
+
+    if (pathParts.length === 1 && pathParts[0] === 'blog') {
+        currentSort = 'new';
+    } else if (pathParts.length === 2 && pathParts[0] === 'blog' && pathParts[1] === 'top') {
+        currentSort = 'top';
+    } else {
+        currentSort = 'new';
+    }
+
+    // Update sort button active state
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.sort === currentSort) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 // Check authentication status on page load
 document.addEventListener('DOMContentLoaded', () => {
+    initializeView();
     checkAuth();
     loadContentFeed();
 
