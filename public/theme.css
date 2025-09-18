@@ -80,6 +80,7 @@ body::before {
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: 'Courier New', monospace;
+    text-decoration: none;
     letter-spacing: 2px;
     text-shadow: 0 0 5px #00ff41;
     position: relative;
@@ -151,9 +152,7 @@ body::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #333333;
-    padding-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 .sort-options {
@@ -162,7 +161,7 @@ body::before {
 }
 
 .sort-btn {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border: 1px solid #333333;
     border-right: none;
     background: #111111;
@@ -339,6 +338,8 @@ body::before {
 .clickable-title {
     cursor: pointer;
     transition: color 0.2s ease;
+    display: inline-block;
+    max-width: fit-content;
 }
 
 /* Forum header layout */
@@ -353,6 +354,12 @@ body::before {
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.forum-create-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0;
 }
 
 .forum-header h2 {
@@ -474,7 +481,7 @@ body::before {
 
 .forum-table-header {
     display: grid;
-    grid-template-columns: 2fr 80px 120px 80px 120px;
+    grid-template-columns: 80px 2fr 120px 80px 120px;
     gap: 1rem;
     background: #222222;
     border-bottom: 1px solid #333333;
@@ -487,7 +494,7 @@ body::before {
 
 .forum-row {
     display: grid;
-    grid-template-columns: 2fr 80px 120px 80px 120px;
+    grid-template-columns: 80px 2fr 120px 80px 120px;
     gap: 1rem;
     padding: 1rem;
     border-bottom: 1px solid #333333;
@@ -512,6 +519,11 @@ body::before {
     background: #1f2f1f;
 }
 
+/* Add left margin to non-pinned rows to align with pinned rows */
+.forum-row:not(.forum-row-pinned) {
+    margin-left: 3px;
+}
+
 /* Column Styles */
 .forum-col-topic {
     min-width: 0;
@@ -519,8 +531,10 @@ body::before {
 
 .forum-topic-container {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
 }
 
 .forum-topic-title {
@@ -646,7 +660,7 @@ body::before {
 @media (max-width: 1200px) {
     .forum-table-header,
     .forum-row {
-        grid-template-columns: 2fr 60px 100px 60px 100px;
+        grid-template-columns: 60px 2fr 100px 60px 100px;
     }
 
     .admin-btn-mini {
@@ -658,7 +672,7 @@ body::before {
 @media (max-width: 768px) {
     .forum-table-header,
     .forum-row {
-        grid-template-columns: 1fr 50px 80px 50px;
+        grid-template-columns: 50px 1fr 80px 50px;
         gap: 0.5rem;
     }
 
@@ -1255,6 +1269,40 @@ body::before {
     color: #00ff41;
 }
 
+.content-title-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.blog-title-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+}
+
+.vote-score-left {
+    background: #000000;
+    border: 1px solid #333333;
+    border-radius: 4px;
+    padding: 0.5rem;
+    color: #ffffff;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1rem;
+    min-width: 40px;
+    text-align: center;
+    margin-top: 0.25rem;
+}
+
+.vote-and-admin-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .content-meta {
     font-size: 0.8rem;
     color: #888888;
@@ -1328,13 +1376,18 @@ body::before {
 
 .vote-score {
     font-weight: bold;
-    min-width: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     color: #ffffff; /* Default white text for zero */
-    background: #000000; /* Black background */
+    background: #000000; /* Black background to match vote-score-left */
     font-family: 'Courier New', monospace;
-    padding: 0.25rem 0.5rem;
     border: 1px solid #333333;
+    border-radius: 4px; /* Add rounded edges */
+    font-size: 0.9rem;
 }
 
 /* Dynamic vote score colors */
@@ -1660,8 +1713,12 @@ body::before {
     color: #888888;
     font-style: normal;
     text-align: center;
-    padding: 1rem;
+    padding: 1.5rem;
     font-family: 'Courier New', monospace;
+    background: #111111;
+    border: 1px solid #333333;
+    border-radius: 4px;
+    margin-bottom: 1rem;
 }
 
 .no-comments::before {
@@ -1801,6 +1858,7 @@ body::before {
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: 'Courier New', monospace;
+    margin-right: 1rem;
 }
 
 .btn-create::before {

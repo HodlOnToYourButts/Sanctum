@@ -141,7 +141,7 @@ function displayPost() {
     // Update post header with clickable category
     const categorySlug = currentPost.category || 'general-discussion';
     const categoryName = getCategoryDisplayName(categorySlug);
-    const categoryLink = `/forum/category/${getCategorySlug(categorySlug)}`;
+    const categoryLink = `/forums/category/${getCategorySlug(categorySlug)}`;
 
     const categoryElement = document.getElementById('post-category-header');
     categoryElement.textContent = categoryName;
@@ -359,6 +359,15 @@ function updateAdminActions() {
                 actions += '<button class="admin-btn admin-btn-action" onclick="promotePost()">PROMOTE</button>';
             }
         }
+
+        // Enable/Disable replies button (for authors and moderators)
+        if (isAuthor || isModerator) {
+            if (currentPost.allow_comments) {
+                actions += '<button class="admin-btn admin-btn-action" onclick="toggleRepliesEnabled(false)">DISABLE REPLIES</button>';
+            } else {
+                actions += '<button class="admin-btn admin-btn-action" onclick="toggleRepliesEnabled(true)">ENABLE REPLIES</button>';
+            }
+        }
     } else {
         console.log('No currentUser or currentPost:', !!currentUser, !!currentPost);
     }
@@ -486,17 +495,17 @@ async function demotePost() {
 }
 
 function editPost() {
-    window.location.href = `/forum/edit/${postId}`;
+    window.location.href = `/forums/edit/${postId}`;
 }
 
 function editReply(replyId) {
     // For now, redirect to a reply edit page
     // This would need to be implemented as a separate edit interface for replies
-    window.location.href = `/forum/reply/edit/${replyId}`;
+    window.location.href = `/forums/reply/edit/${replyId}`;
 }
 
 function backToForums() {
-    window.location.href = '/forum';
+    window.location.href = '/forums';
 }
 
 async function loadComments() {
@@ -722,6 +731,33 @@ function showError(message) {
     document.getElementById('post-container').style.display = 'none';
     document.getElementById('error-message').textContent = message;
     document.getElementById('error-container').style.display = 'block';
+}
+
+async function toggleRepliesEnabled(enable) {
+    try {
+        const response = await fetch(`/api/content/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                allow_comments: enable
+            })
+        });
+
+        if (response.ok) {
+            alert(`Replies ${enable ? 'enabled' : 'disabled'} successfully!`);
+            currentPost.allow_comments = enable;
+            updateAdminActions(); // Refresh admin actions
+            updateCommentForm(); // Update comment form visibility
+        } else {
+            const error = await response.json();
+            alert(`Failed to ${enable ? 'enable' : 'disable'} replies: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error toggling replies:', error);
+        alert('Failed to update replies setting. Please try again.');
+    }
 }
 
 // Initialize page

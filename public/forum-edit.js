@@ -20,8 +20,8 @@ function initializeMode() {
         document.title = 'Create Forum Post | Sanctum';
         document.getElementById('page-heading').textContent = 'Create New Forum Post';
 
-        // Pre-select category if provided in URL path: /forum/create/general
-        if (pathParts.length >= 3 && pathParts[0] === 'forum' && pathParts[1] === 'create') {
+        // Pre-select category if provided in URL path: /forums/create/general
+        if (pathParts.length >= 3 && pathParts[0] === 'forums' && pathParts[1] === 'create') {
             const categorySlug = pathParts[2];
             document.getElementById('forum-category').value = categorySlug;
         }
@@ -145,9 +145,9 @@ function showError(message) {
 
 function cancelEdit() {
     if (isEditMode) {
-        window.location.href = `/forum/view/${postId}`;
+        window.location.href = `/forums/view/${postId}`;
     } else {
-        window.location.href = '/forum';
+        window.location.href = '/forums';
     }
 }
 
@@ -206,7 +206,7 @@ document.getElementById('forum-form').addEventListener('submit', async (e) => {
             const resultId = result._id || result.id || postId;
 
             alert(isEditMode ? 'Forum post updated successfully!' : 'Forum post created successfully!');
-            window.location.href = `/forum/view/${resultId}`;
+            window.location.href = `/forums/view/${resultId}`;
         } else {
             const error = await response.json();
             throw new Error(error.error || 'Failed to save forum post');

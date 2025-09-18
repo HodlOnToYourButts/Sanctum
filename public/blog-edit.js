@@ -137,9 +137,9 @@ function showError(message) {
 
 function cancelEdit() {
     if (isEditMode) {
-        window.location.href = `/blog/view/${blogId}`;
+        window.location.href = `/blogs/view/${blogId}`;
     } else {
-        window.location.href = '/blog';
+        window.location.href = '/blogs';
     }
 }
 
@@ -196,7 +196,7 @@ document.getElementById('blog-form').addEventListener('submit', async (e) => {
             const resultId = result._id || result.id || blogId;
 
             alert(isEditMode ? 'Blog updated successfully!' : 'Blog created successfully!');
-            window.location.href = `/blog/view/${resultId}`;
+            window.location.href = `/blogs/view/${resultId}`;
         } else {
             const error = await response.json();
             throw new Error(error.error || 'Failed to save blog');

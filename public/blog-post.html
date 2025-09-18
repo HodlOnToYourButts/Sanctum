@@ -11,10 +11,10 @@
     <div class="header">
         <div class="header-content">
             <div class="header-left">
-                <button class="logo" onclick="window.location.href='/'">Sanctum</button>
+                <a href="/" class="logo">Sanctum</a>
                 <nav class="nav-menu">
-                    <a href="/blog" class="nav-item active">Blogs</a>
-                    <a href="/forum" class="nav-item">Forums</a>
+                    <a href="/blogs" class="nav-item active">Blogs</a>
+                    <a href="/forums" class="nav-item">Forums</a>
                 </nav>
             </div>
             <div class="user-auth-section">
@@ -36,10 +36,6 @@
                     <div id="content-title" class="content-title"></div>
                     <div id="content-meta" class="content-meta"></div>
                 </div>
-                <div id="admin-actions" class="content-admin-actions"></div>
-            </div>
-            <div id="content-body" class="content-body"></div>
-            <div id="content-actions" class="content-actions">
                 <div class="vote-buttons">
                     <button id="upvote-btn" class="vote-btn" onclick="vote('up')">
                         ↑ <span id="upvote-count">0</span>
@@ -49,13 +45,17 @@
                         ↓ <span id="downvote-count">0</span>
                     </button>
                 </div>
+            </div>
+            <div id="content-body" class="content-body"></div>
+            <div id="content-actions" class="content-actions">
+                <div id="admin-actions" class="content-admin-actions"></div>
                 <div class="comment-actions">
                     <button id="toggle-comments-btn" class="comment-btn" onclick="toggleComments()">
                         💬 <span id="comment-count">0</span> comments
                     </button>
                 </div>
             </div>
-            <div id="comments-section" class="comments-section">
+            <div id="comments-section" class="comments-section" style="display: none;">
                 <div class="comment-form">
                     <div id="comment-form-content">
                         <p>Login to leave a comment</p>

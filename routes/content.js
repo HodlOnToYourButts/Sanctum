@@ -2,6 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const database = require('../lib/database');
 const winston = require('winston');
+const { getVoteCounts, getUserVote, createVote, removeVote, getBulkVoteCounts } = require('../lib/vote-helpers');
 
 // Use bypass auth in development, OIDC in production
 const authModule = process.env.BYPASS_OIDC === 'true'
@@ -162,12 +163,23 @@ router.get('/feed', async (req, res) => {
         author_name: doc.author?.name,
         author_id: doc.author?.id,
         tags: doc.tags || [],
-        votes: doc.votes || { up: 0, down: 0, score: 0 },
+        votes: { up: 0, down: 0, score: 0 }, // Will be populated below
         allow_comments: doc.allow_comments,
         comment_count: 0, // Will be calculated below
         featured: doc.featured || false,
         pinned: doc.pinned || false
       }));
+
+    // Get vote counts for all items efficiently using bulk query
+    const contentIds = items.map(item => item._id);
+    const voteCounts = await getBulkVoteCounts(db, contentIds);
+
+    // Apply vote counts to items
+    items.forEach(item => {
+      if (voteCounts[item._id]) {
+        item.votes = voteCounts[item._id];
+      }
+    });
 
     // Sort items
     if (sort === 'top') {
@@ -239,6 +251,15 @@ router.get('/:id', async (req, res) => {
         logger.error('Error counting responses for single content', { contentId: content._id, error: error.message });
         content.comment_count = 0;
       }
+    }
+
+    // Get vote counts for this content item
+    try {
+      const votes = await getVoteCounts(db, content._id);
+      content.votes = votes;
+    } catch (error) {
+      logger.error('Error getting votes for content', { contentId: content._id, error: error.message });
+      content.votes = { up: 0, down: 0, score: 0 };
     }
 
     res.json(content);
@@ -534,7 +555,7 @@ router.put('/:id/comments/:commentId', requireOidcAuth('admin'), async (req, res
   }
 });
 
-// Voting system
+// Atomic voting system using separate vote documents
 router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
   try {
     const { vote } = req.body; // 'up', 'down', or 'remove'
@@ -545,72 +566,47 @@ router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
 
     await database.connect();
     const db = database.getDb();
-    const content = await db.get(req.params.id);
 
+    // Verify content exists
+    const content = await db.get(req.params.id);
     if (!content.type || !['page', 'blog', 'forum'].includes(content.type)) {
       return res.status(404).json({ error: 'Content not found' });
     }
 
-    // Initialize voting fields if they don't exist
-    if (!content.votes) {
-      content.votes = { up: 0, down: 0, score: 0 };
-    }
-    if (!content.voter_list) {
-      content.voter_list = [];
-    }
-
+    const contentId = req.params.id;
     const userId = req.user.id;
-    const existingVote = content.voter_list.find(v => v.user_id === userId);
 
-    // Remove existing vote if any
-    if (existingVote) {
-      if (existingVote.type === 'up') {
-        content.votes.up--;
-      } else if (existingVote.type === 'down') {
-        content.votes.down--;
-      }
-      content.voter_list = content.voter_list.filter(v => v.user_id !== userId);
+    // Handle voting with atomic operations
+    if (vote === 'remove') {
+      await removeVote(db, contentId, userId);
+    } else {
+      await createVote(db, contentId, userId, vote);
     }
 
-    // Add new vote if not removing
-    if (vote !== 'remove') {
-      content.voter_list.push({
-        user_id: userId,
-        type: vote,
-        timestamp: new Date().toISOString()
-      });
-
-      if (vote === 'up') {
-        content.votes.up++;
-      } else if (vote === 'down') {
-        content.votes.down++;
-      }
-    }
-
-    // Calculate score
-    content.votes.score = content.votes.up - content.votes.down;
-    content.updated_at = new Date().toISOString();
-
-    await db.insert(content);
+    // Get updated vote counts and user vote
+    const [votes, userVote] = await Promise.all([
+      getVoteCounts(db, contentId),
+      vote === 'remove' ? null : getUserVote(db, userId, contentId)
+    ]);
 
     res.json({
-      votes: content.votes,
-      userVote: vote === 'remove' ? null : vote
+      votes: votes,
+      userVote: userVote
     });
 
     logger.info('Content voted', {
-      contentId: req.params.id,
-      userId: req.user.id,
+      contentId: contentId,
+      userId: userId,
       voteType: vote,
-      newScore: content.votes.score
+      newScore: votes.score
     });
 
   } catch (error) {
     if (error.statusCode === 404) {
       res.status(404).json({ error: 'Content not found' });
     } else {
-      logger.error('Error voting on content', { error: error.message });
-      res.status(500).json({ error: 'Failed to vote' });
+      logger.error('Error voting on content', { id: req.params.id, error: error.message });
+      res.status(500).json({ error: 'Failed to vote on content' });
     }
   }
 });

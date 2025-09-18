@@ -111,8 +111,7 @@ async function loadPost() {
         document.getElementById('content-title').textContent = currentPost.title;
         document.getElementById('content-meta').innerHTML = `
             By ${escapeHtml(currentPost.author_name || 'Unknown')} •
-            ${new Date(currentPost.created_at).toLocaleDateString()} •
-            ${currentPost.type}
+            ${new Date(currentPost.created_at).toLocaleDateString()}
             ${currentPost.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
         `;
         document.getElementById('content-body').textContent = currentPost.body;
@@ -207,10 +206,25 @@ function updateAdminActions() {
 
     if (canEdit) {
         actionsHtml += `
-            <button class="admin-btn admin-btn-nav" onclick="editPost()" title="Edit post">
+            <button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editPost()" title="Edit post">
                 Edit
             </button>
         `;
+
+        // Add enable/disable comments button
+        if (currentPost.allow_comments) {
+            actionsHtml += `
+                <button class="admin-btn admin-btn-action" onclick="toggleCommentsEnabled(false)" title="Disable comments">
+                    DISABLE COMMENTS
+                </button>
+            `;
+        } else {
+            actionsHtml += `
+                <button class="admin-btn admin-btn-action" onclick="toggleCommentsEnabled(true)" title="Enable comments">
+                    ENABLE COMMENTS
+                </button>
+            `;
+        }
     }
 
     adminActions.innerHTML = actionsHtml;
@@ -384,7 +398,32 @@ async function demoteFromFrontPage() {
 }
 
 function editPost() {
-    window.location.href = `/blog/edit/${postId}`;
+    window.location.href = `/blogs/edit/${postId}`;
+}
+
+async function toggleCommentsEnabled(enable) {
+    try {
+        const response = await fetch(`/api/content/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                allow_comments: enable
+            })
+        });
+
+        if (response.ok) {
+            alert(`Comments ${enable ? 'enabled' : 'disabled'} successfully!`);
+            await loadPost(); // Refresh to update comments status
+        } else {
+            const error = await response.json();
+            alert(`Failed to ${enable ? 'enable' : 'disable'} comments: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error toggling comments:', error);
+        alert('Failed to update comments setting. Please try again.');
+    }
 }
 
 async function updatePost(newBody) {

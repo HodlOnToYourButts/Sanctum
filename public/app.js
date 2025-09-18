@@ -111,49 +111,19 @@ function displayContentFeed(contentList) {
         return `
             <div class="content-item content-item-${item.type}">
                 <div class="content-header-item">
-                    <div>
-                        <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
-                        <div class="content-meta">
-                            <span class="content-type-badge content-type-${item.type}">${getContentTypeLabel(item.type)}</span>
-                            By ${escapeHtml(item.author_name || 'Unknown')} •
-                            ${new Date(item.created_at).toLocaleDateString()}
+                    <div class="blog-title-section">
+                        <span class="vote-score-left">${item.votes.score}</span>
+                        <div>
+                            <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
+                            <div class="content-meta">
+                                By ${escapeHtml(item.author_name || 'Unknown')} •
+                                ${new Date(item.created_at).toLocaleDateString()}
+                            </div>
                         </div>
                     </div>
+                    <span class="content-type-badge content-type-${item.type}">${getContentTypeLabel(item.type)}</span>
                 </div>
                 <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
-                <div class="content-actions">
-                    <div class="vote-buttons">
-                        <button class="vote-btn ${userVote === 'up' ? 'upvoted' : ''}"
-                                onclick="vote('${item._id}', 'up')" ${!currentUser ? 'disabled' : ''}>
-                            ↑ ${item.votes.up}
-                        </button>
-                        <span class="vote-score">${item.votes.score}</span>
-                        <button class="vote-btn ${userVote === 'down' ? 'downvoted' : ''}"
-                                onclick="vote('${item._id}', 'down')" ${!currentUser ? 'disabled' : ''}>
-                            ↓ ${item.votes.down}
-                        </button>
-                    </div>
-                    <div class="comment-actions">
-                        ${item.allow_comments ? `
-                            <button class="comment-btn" onclick="toggleComments('${item._id}')">
-                                ${getCommentLabel(item.type, item.comment_count || 0)}
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-                ${item.allow_comments ? `
-                    <div id="comments-${item._id}" class="comments-section" data-content-type="${item.type}" style="display: ${openComments.has(item._id) ? 'block' : 'none'};">
-                        <div class="comment-form">
-                            ${currentUser ? `
-                                <textarea id="comment-text-${item._id}" placeholder="Add a ${getCommentType(item.type)}..." rows="3"></textarea>
-                                <button onclick="submitComment('${item._id}')" class="btn-comment">${getCommentButtonLabel(item.type)}</button>
-                            ` : `<div class=\"login-prompt\"><div class=\"login-prompt-content\"><p>You must be logged in to leave a ${getCommentType(item.type)}.</p><button class=\"auth-button\" onclick=\"goToLogin()\">Login</button></div></div>`}
-                        </div>
-                        <div id="comments-list-${item._id}" class="comments-list">
-                            Loading ${getCommentType(item.type)}s...
-                        </div>
-                    </div>
-                ` : ''}
             </div>
         `;
     }).join('');
@@ -171,16 +141,16 @@ function displayContentFeed(contentList) {
 // Content type configuration for extensibility
 function getContentTypeLabel(type) {
     const typeLabels = {
-        'blog': 'Blog',
-        'forum': 'Forum',
-        'event': 'Event',
-        'site': 'Site',
-        'game': 'Game',
-        'project': 'Project',
-        'tutorial': 'Tutorial',
-        'announcement': 'Announcement'
+        'blog': 'BLOG',
+        'forum': 'FORUM',
+        'event': 'EVENT',
+        'site': 'SITE',
+        'game': 'GAME',
+        'project': 'PROJECT',
+        'tutorial': 'TUTORIAL',
+        'announcement': 'ANNOUNCEMENT'
     };
-    return typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1);
+    return typeLabels[type] || type.toUpperCase();
 }
 
 function getCommentType(type) {
@@ -400,17 +370,17 @@ function viewFullPost(postId) {
     for (let item of contentItems) {
         if (item.innerHTML.includes(postId)) {
             if (item.classList.contains('content-item-forum')) {
-                window.location.href = `/forum/view/${postId}`;
+                window.location.href = `/forums/view/${postId}`;
                 return;
             } else if (item.classList.contains('content-item-blog')) {
-                window.location.href = `/blog/view/${postId}`;
+                window.location.href = `/blogs/view/${postId}`;
                 return;
             }
         }
     }
 
     // Default fallback to blog view
-    window.location.href = `/blog/view/${postId}`;
+    window.location.href = `/blogs/view/${postId}`;
 }
 
 // Promote post to front page
@@ -461,7 +431,7 @@ async function demoteFromFrontPage(postId) {
 
 // Edit post
 function editPost(postId) {
-    window.location.href = `/blog/edit/${postId}`;
+    window.location.href = `/blogs/edit/${postId}`;
 }
 
 // Check authentication status on page load

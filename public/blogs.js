@@ -114,50 +114,19 @@ function displayContentFeed(contentList) {
         return `
             <div class="content-item">
                 <div class="content-header-item">
-                    <div>
-                        <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
-                        <div class="content-meta">
-                            By ${escapeHtml(item.author_name || 'Unknown')} •
-                            ${new Date(item.created_at).toLocaleDateString()} •
-                            ${item.type}
-                            ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
+                    <div class="blog-title-section">
+                        <span class="vote-score-left">${item.votes.score}</span>
+                        <div>
+                            <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
+                            <div class="content-meta">
+                                By ${escapeHtml(item.author_name || 'Unknown')} •
+                                ${new Date(item.created_at).toLocaleDateString()}
+                            </div>
                         </div>
                     </div>
+                    ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
                 </div>
                 <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
-                <div class="content-actions">
-                    <div class="vote-buttons">
-                        <button class="vote-btn ${userVote === 'up' ? 'upvoted' : ''}"
-                                onclick="vote('${item._id}', 'up')" ${!currentUser ? 'disabled' : ''}>
-                            ↑ ${item.votes.up}
-                        </button>
-                        <span class="vote-score">${item.votes.score}</span>
-                        <button class="vote-btn ${userVote === 'down' ? 'downvoted' : ''}"
-                                onclick="vote('${item._id}', 'down')" ${!currentUser ? 'disabled' : ''}>
-                            ↓ ${item.votes.down}
-                        </button>
-                    </div>
-                    <div class="comment-actions">
-                        ${item.allow_comments ? `
-                            <button class="comment-btn" onclick="toggleComments('${item._id}')">
-                                ${item.comment_count || 0} comments
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-                ${item.allow_comments ? `
-                    <div id="comments-${item._id}" class="comments-section" style="display: none;">
-                        <div class="comment-form">
-                            ${currentUser ? `
-                                <textarea id="comment-text-${item._id}" placeholder="Add a comment..." rows="3"></textarea>
-                                <button onclick="submitComment('${item._id}')" class="btn-comment">Comment</button>
-                            ` : '<div class=\"login-prompt\"><div class=\"login-prompt-content\"><p>You must be logged in to leave a comment.</p><button class=\"auth-button\" onclick=\"goToLogin()\">Login</button></div></div>'}
-                        </div>
-                        <div id="comments-list-${item._id}" class="comments-list">
-                            Loading comments...
-                        </div>
-                    </div>
-                ` : ''}
             </div>
         `;
     }).join('');
@@ -209,7 +178,7 @@ function getUserVote(contentId) {
 
 function setSort(sort) {
     const sortPath = sort === 'top' ? '/top' : '';
-    window.location.href = `/blog${sortPath}`;
+    window.location.href = `/blogs${sortPath}`;
 }
 
 function escapeHtml(text) {
@@ -316,7 +285,7 @@ async function submitComment(contentId) {
 
 // View full post
 function viewFullPost(postId) {
-    window.location.href = `/blog/view/${postId}`;
+    window.location.href = `/blogs/view/${postId}`;
 }
 
 // Promote post to front page
@@ -367,7 +336,7 @@ async function demoteFromFrontPage(postId) {
 
 // Edit post
 function editPost(postId) {
-    window.location.href = `/blog/edit/${postId}`;
+    window.location.href = `/blogs/edit/${postId}`;
 }
 
 // Update post content
@@ -398,7 +367,7 @@ async function updatePost(postId, newBody) {
 
 // Create new blog
 function createNewBlog() {
-    window.location.href = '/blog/create';
+    window.location.href = '/blogs/create';
 }
 
 // URL routing function
@@ -406,9 +375,9 @@ function initializeView() {
     const path = window.location.pathname;
     const pathParts = path.split('/').filter(part => part);
 
-    if (pathParts.length === 1 && pathParts[0] === 'blog') {
+    if (pathParts.length === 1 && pathParts[0] === 'blogs') {
         currentSort = 'new';
-    } else if (pathParts.length === 2 && pathParts[0] === 'blog' && pathParts[1] === 'top') {
+    } else if (pathParts.length === 2 && pathParts[0] === 'blogs' && pathParts[1] === 'top') {
         currentSort = 'top';
     } else {
         currentSort = 'new';

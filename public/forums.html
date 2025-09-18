@@ -11,10 +11,10 @@
     <div class="header">
         <div class="header-content">
             <div class="header-left">
-                <button class="logo" onclick="window.location.href='/'">Sanctum</button>
+                <a href="/" class="logo">Sanctum</a>
                 <nav class="nav-menu">
-                    <a href="/blog" class="nav-item">Blogs</a>
-                    <a href="/forum" class="nav-item active">Forums</a>
+                    <a href="/blogs" class="nav-item">Blogs</a>
+                    <a href="/forums" class="nav-item active">Forums</a>
                 </nav>
             </div>
             <div class="user-auth-section">
@@ -31,22 +31,26 @@
     <div class="container">
         <!-- Categories view -->
         <div id="categories-view">
+            <div class="content-header">
+                <div class="forum-header-left">
+                    <h2>Forums</h2>
+                </div>
+                <div></div>
+            </div>
             <div id="categories-loading" class="loading">Loading categories...</div>
             <div id="categories-grid" class="category-grid"></div>
         </div>
 
         <!-- Forum posts view -->
         <div id="forum-view" style="display: none;">
-            <div class="forum-header">
+            <div class="content-header">
                 <div class="forum-header-left">
                     <h2 id="forum-title"></h2>
                 </div>
-                <button id="create-post-btn" class="btn-create" onclick="createNewPost()" style="display: none;">
-                    Create Post
-                </button>
-            </div>
-            <div class="content-header">
                 <div class="sort-options">
+                    <button id="create-post-btn" class="btn-create" onclick="createNewPost()" style="display: none;">
+                        Create Post
+                    </button>
                     <button class="sort-btn active" data-sort="new">New</button>
                     <button class="sort-btn" data-sort="top">Top</button>
                 </div>

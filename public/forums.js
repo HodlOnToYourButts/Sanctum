@@ -170,7 +170,7 @@ function displayCategories(categories) {
     container.innerHTML = categories.map(category => {
         const categorySlug = categoryMappings[category.id]?.slug || category.id;
         return `
-        <a href="/forum/category/${categorySlug}" class="category-card">
+        <a href="/forums/category/${categorySlug}" class="category-card">
             <div class="category-icon">${category.icon}</div>
             <div class="category-title"><span class="category-prefix">></span> ${escapeHtml(category.title)}</div>
             <div class="category-description">${escapeHtml(category.description)}</div>
@@ -187,11 +187,11 @@ function displayCategories(categories) {
 function openCategory(categoryId) {
     // Use clean URL navigation
     const categorySlug = categoryMappings[categoryId]?.slug || categoryId;
-    window.location.href = `/forum/category/${categorySlug}`;
+    window.location.href = `/forums/category/${categorySlug}`;
 }
 
 function backToCategories() {
-    window.location.href = '/forum';
+    window.location.href = '/forums';
 }
 
 async function loadForumPosts() {
@@ -237,8 +237,8 @@ function displayForumPosts(postsList) {
     let forumHTML = `
         <div class="forum-table">
             <div class="forum-table-header">
+                <div class="forum-col-votes"></div>
                 <div class="forum-col-topic">TOPIC</div>
-                <div class="forum-col-votes">VOTES</div>
                 <div class="forum-col-author">AUTHOR</div>
                 <div class="forum-col-replies">REPLIES</div>
                 <div class="forum-col-activity">LAST ACTIVITY</div>
@@ -256,16 +256,17 @@ function displayForumPosts(postsList) {
 
         return `
             <div class="forum-row ${item.pinned ? 'forum-row-pinned' : ''}">
+                <div class="forum-col-votes">
+                    <div class="forum-votes-container">
+                        <span class="vote-score">${item.votes.score}</span>
+                    </div>
+                </div>
                 <div class="forum-col-topic">
                     <div class="forum-topic-container">
                         <div class="forum-topic-title" onclick="viewFullPost('${item._id}')">
                             <span class="forum-prefix">>></span> ${escapeHtml(item.title)}
                         </div>
-                    </div>
-                </div>
-                <div class="forum-col-votes">
-                    <div class="forum-votes-container">
-                        <span class="vote-score">${item.votes.score}</span>
+                        ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
                     </div>
                 </div>
                 <div class="forum-col-author">
@@ -423,16 +424,16 @@ async function submitComment(contentId) {
 }
 
 function viewFullPost(postId) {
-    window.location.href = `/forum/view/${postId}`;
+    window.location.href = `/forums/view/${postId}`;
 }
 
 function editPost(postId) {
-    window.location.href = `/forum/edit/${postId}`;
+    window.location.href = `/forums/edit/${postId}`;
 }
 
 function createNewPost() {
     const categorySlug = categoryMappings[currentCategory]?.slug || currentCategory;
-    window.location.href = `/forum/create/${categorySlug}`;
+    window.location.href = `/forums/create/${categorySlug}`;
 }
 
 // Promote post to front page
@@ -531,7 +532,7 @@ function setSort(sort) {
     if (currentCategory) {
         const categorySlug = categoryMappings[currentCategory]?.slug || currentCategory;
         const sortPath = sort === 'top' ? '/top' : '';
-        window.location.href = `/forum/category/${categorySlug}${sortPath}`;
+        window.location.href = `/forums/category/${categorySlug}${sortPath}`;
     }
 }
 
@@ -558,12 +559,12 @@ function initializeView() {
     const path = window.location.pathname;
     const pathParts = path.split('/').filter(part => part); // Remove empty parts
 
-    if (pathParts.length === 1 && pathParts[0] === 'forum') {
-        // /forum - show categories
+    if (pathParts.length === 1 && pathParts[0] === 'forums') {
+        // /forums - show categories
         showCategoriesView();
         loadCategories();
-    } else if (pathParts.length >= 3 && pathParts[0] === 'forum' && pathParts[1] === 'category') {
-        // /forum/category/general-discussion or /forum/category/general-discussion/top
+    } else if (pathParts.length >= 3 && pathParts[0] === 'forums' && pathParts[1] === 'category') {
+        // /forums/category/general-discussion or /forums/category/general-discussion/top
         const categorySlug = pathParts[2];
         const sortType = pathParts[3] || 'new';
 

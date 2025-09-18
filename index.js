@@ -202,83 +202,95 @@ app.get('/admin', (req, res) => {
 // === NEW CLEAN URL STRUCTURE ===
 
 // Blog routes
-app.get('/blog', (req, res) => {
+app.get('/blogs', (req, res) => {
   res.sendFile(__dirname + '/public/blogs.html');
 });
 
-app.get('/blog/top', (req, res) => {
+app.get('/blogs/top', (req, res) => {
   res.sendFile(__dirname + '/public/blogs.html');
 });
 
-app.get('/blog/create', (req, res) => {
+app.get('/blogs/create', (req, res) => {
   res.sendFile(__dirname + '/public/blog-edit.html');
 });
 
-app.get('/blog/edit/:id', (req, res) => {
+app.get('/blogs/edit/:id', (req, res) => {
   res.sendFile(__dirname + '/public/blog-edit.html');
 });
 
-app.get('/blog/view/:id', (req, res) => {
+app.get('/blogs/view/:id', (req, res) => {
   res.sendFile(__dirname + '/public/blog-post.html');
 });
 
 // Forum routes
-app.get('/forum', (req, res) => {
-  res.sendFile(__dirname + '/public/forums.html');
-});
-
-app.get('/forum/category/:category', (req, res) => {
-  res.sendFile(__dirname + '/public/forums.html');
-});
-
-app.get('/forum/category/:category/top', (req, res) => {
-  res.sendFile(__dirname + '/public/forums.html');
-});
-
-app.get('/forum/create/:category', (req, res) => {
-  res.sendFile(__dirname + '/public/forum-edit.html');
-});
-
-app.get('/forum/edit/:id', (req, res) => {
-  res.sendFile(__dirname + '/public/forum-edit.html');
-});
-
-app.get('/forum/view/:id', (req, res) => {
-  res.sendFile(__dirname + '/public/forum-post.html');
-});
-
-// === LEGACY URL REDIRECTS (temporary) ===
-
-app.get('/blogs', (req, res) => {
-  res.redirect(301, '/blog');
-});
-
 app.get('/forums', (req, res) => {
-  res.redirect(301, '/forum');
+  res.sendFile(__dirname + '/public/forums.html');
 });
 
-app.get('/blogs/create', (req, res) => {
-  res.redirect(301, '/blog/create');
+app.get('/forums/category/:category', (req, res) => {
+  res.sendFile(__dirname + '/public/forums.html');
 });
 
-app.get('/blogs/edit/:id', (req, res) => {
-  res.redirect(301, `/blog/edit/${req.params.id}`);
+app.get('/forums/category/:category/top', (req, res) => {
+  res.sendFile(__dirname + '/public/forums.html');
 });
 
-app.get('/blogs/:id', (req, res) => {
-  res.redirect(301, `/blog/view/${req.params.id}`);
-});
-
-app.get('/forums/create', (req, res) => {
-  res.redirect(301, '/forum/create/general');
+app.get('/forums/create/:category', (req, res) => {
+  res.sendFile(__dirname + '/public/forum-edit.html');
 });
 
 app.get('/forums/edit/:id', (req, res) => {
-  res.redirect(301, `/forum/edit/${req.params.id}`);
+  res.sendFile(__dirname + '/public/forum-edit.html');
 });
 
-app.get('/forums/:id', (req, res) => {
-  res.redirect(301, `/forum/view/${req.params.id}`);
+app.get('/forums/view/:id', (req, res) => {
+  res.sendFile(__dirname + '/public/forum-post.html');
+});
+
+// === LEGACY URL REDIRECTS ===
+
+app.get('/blog', (req, res) => {
+  res.redirect(301, '/blogs');
+});
+
+app.get('/forum', (req, res) => {
+  res.redirect(301, '/forums');
+});
+
+app.get('/blog/top', (req, res) => {
+  res.redirect(301, '/blogs/top');
+});
+
+app.get('/blog/create', (req, res) => {
+  res.redirect(301, '/blogs/create');
+});
+
+app.get('/blog/edit/:id', (req, res) => {
+  res.redirect(301, `/blogs/edit/${req.params.id}`);
+});
+
+app.get('/blog/view/:id', (req, res) => {
+  res.redirect(301, `/blogs/view/${req.params.id}`);
+});
+
+app.get('/forum/category/:category', (req, res) => {
+  res.redirect(301, `/forums/category/${req.params.category}`);
+});
+
+app.get('/forum/category/:category/top', (req, res) => {
+  res.redirect(301, `/forums/category/${req.params.category}/top`);
+});
+
+app.get('/forum/create/:category', (req, res) => {
+  res.redirect(301, `/forums/create/${req.params.category}`);
+});
+
+app.get('/forum/edit/:id', (req, res) => {
+  res.redirect(301, `/forums/edit/${req.params.id}`);
+});
+
+app.get('/forum/view/:id', (req, res) => {
+  res.redirect(301, `/forums/view/${req.params.id}`);
 });
 
 app.get('/api', (req, res) => {
