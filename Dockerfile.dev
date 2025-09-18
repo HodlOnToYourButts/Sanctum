@@ -1,0 +1,25 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including dev dependencies)
+RUN npm install
+
+# Copy application code
+COPY . .
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S sanctum -u 1001 -G nodejs
+
+# Change ownership of the app directory
+RUN chown -R sanctum:nodejs /app
+USER sanctum
+
+EXPOSE 8080
+
+# Use npx to ensure nodemon is found
+CMD ["npx", "nodemon", "index.js"]

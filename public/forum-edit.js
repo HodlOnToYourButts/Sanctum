@@ -1,23 +1,30 @@
 // Global state
 let currentUser = null;
 let isEditMode = false;
-let blogId = null;
+let postId = null;
 
 // Determine if we're in edit mode or create mode
 function initializeMode() {
     const path = window.location.pathname;
+    const pathParts = path.split('/').filter(part => part);
 
-    if (path.includes('/edit/')) {
+    if (pathParts.includes('edit')) {
         isEditMode = true;
-        blogId = path.split('/').pop();
-        document.getElementById('page-title').textContent = 'Edit Blog | Sanctum';
-        document.title = 'Edit Blog | Sanctum';
-        document.getElementById('page-heading').textContent = 'Edit Blog';
+        postId = pathParts[pathParts.length - 1];
+        document.getElementById('page-title').textContent = 'Edit Forum Post | Sanctum';
+        document.title = 'Edit Forum Post | Sanctum';
+        document.getElementById('page-heading').textContent = 'Edit Forum Post';
     } else {
         isEditMode = false;
-        document.getElementById('page-title').textContent = 'Create Blog | Sanctum';
-        document.title = 'Create Blog | Sanctum';
-        document.getElementById('page-heading').textContent = 'Create New Blog';
+        document.getElementById('page-title').textContent = 'Create Forum Post | Sanctum';
+        document.title = 'Create Forum Post | Sanctum';
+        document.getElementById('page-heading').textContent = 'Create New Forum Post';
+
+        // Pre-select category if provided in URL path: /forum/create/general
+        if (pathParts.length >= 3 && pathParts[0] === 'forum' && pathParts[1] === 'create') {
+            const categorySlug = pathParts[2];
+            document.getElementById('forum-category').value = categorySlug;
+        }
     }
 }
 
@@ -29,12 +36,12 @@ async function checkAuth() {
             showLoggedInState(user);
 
             if (isEditMode) {
-                await loadBlogForEdit();
+                await loadPostForEdit();
             } else {
                 showEditForm();
             }
         } else if (response.status === 401) {
-            showError('You must be logged in to create or edit blogs.');
+            showError('You must be logged in to create or edit forum posts.');
         } else {
             console.warn('Auth check returned unexpected status:', response.status);
             showError('Authentication error. Please try logging in again.');
@@ -87,39 +94,40 @@ async function logout() {
     }
 }
 
-async function loadBlogForEdit() {
+async function loadPostForEdit() {
     try {
-        const response = await fetch(`/api/content/${blogId}`);
+        const response = await fetch(`/api/content/${postId}`);
 
         if (!response.ok) {
             if (response.status === 404) {
-                showError('Blog post not found.');
+                showError('Forum post not found.');
                 return;
             }
-            throw new Error('Failed to load blog post');
+            throw new Error('Failed to load forum post');
         }
 
-        const blog = await response.json();
+        const post = await response.json();
 
-        // Check if user can edit this blog
-        const isAuthor = currentUser.id === blog.author_id;
+        // Check if user can edit this post
+        const isAuthor = currentUser.id === post.author_id;
         const isModerator = currentUser.roles.includes('admin') || currentUser.roles.includes('moderator');
 
         if (!isAuthor && !isModerator) {
-            showError('You do not have permission to edit this blog post.');
+            showError('You do not have permission to edit this forum post.');
             return;
         }
 
         // Populate form with existing data
-        document.getElementById('blog-title').value = blog.title || '';
-        document.getElementById('blog-body').value = blog.body || '';
-        document.getElementById('allow-comments').checked = blog.allow_comments !== false;
+        document.getElementById('forum-category').value = post.category || '';
+        document.getElementById('forum-title').value = post.title || '';
+        document.getElementById('forum-body').value = post.body || '';
+        document.getElementById('allow-comments').checked = post.allow_comments !== false;
 
         showEditForm();
 
     } catch (error) {
-        console.error('Error loading blog for edit:', error);
-        showError('Failed to load blog post for editing.');
+        console.error('Error loading post for edit:', error);
+        showError('Failed to load forum post for editing.');
     }
 }
 
@@ -137,22 +145,23 @@ function showError(message) {
 
 function cancelEdit() {
     if (isEditMode) {
-        window.location.href = `/blog/view/${blogId}`;
+        window.location.href = `/forum/view/${postId}`;
     } else {
-        window.location.href = '/blog';
+        window.location.href = '/forum';
     }
 }
 
 // Handle form submission
-document.getElementById('blog-form').addEventListener('submit', async (e) => {
+document.getElementById('forum-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const title = document.getElementById('blog-title').value.trim();
-    const body = document.getElementById('blog-body').value.trim();
+    const category = document.getElementById('forum-category').value;
+    const title = document.getElementById('forum-title').value.trim();
+    const body = document.getElementById('forum-body').value.trim();
     const allowComments = document.getElementById('allow-comments').checked;
 
-    if (!title || !body) {
-        alert('Please fill in both title and content fields.');
+    if (!category || !title || !body) {
+        alert('Please fill in all required fields.');
         return;
     }
 
@@ -162,8 +171,9 @@ document.getElementById('blog-form').addEventListener('submit', async (e) => {
     saveButton.disabled = true;
 
     try {
-        const blogData = {
-            type: 'blog',
+        const postData = {
+            type: 'forum',
+            category: category,
             title: title,
             body: body,
             allow_comments: allowComments,
@@ -172,39 +182,39 @@ document.getElementById('blog-form').addEventListener('submit', async (e) => {
 
         let response;
         if (isEditMode) {
-            // Update existing blog
-            response = await fetch(`/api/content/${blogId}`, {
+            // Update existing post
+            response = await fetch(`/api/content/${postId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(blogData)
+                body: JSON.stringify(postData)
             });
         } else {
-            // Create new blog
+            // Create new post
             response = await fetch('/api/content', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(blogData)
+                body: JSON.stringify(postData)
             });
         }
 
         if (response.ok) {
             const result = await response.json();
-            const resultId = result._id || result.id || blogId;
+            const resultId = result._id || result.id || postId;
 
-            alert(isEditMode ? 'Blog updated successfully!' : 'Blog created successfully!');
-            window.location.href = `/blog/view/${resultId}`;
+            alert(isEditMode ? 'Forum post updated successfully!' : 'Forum post created successfully!');
+            window.location.href = `/forum/view/${resultId}`;
         } else {
             const error = await response.json();
-            throw new Error(error.error || 'Failed to save blog');
+            throw new Error(error.error || 'Failed to save forum post');
         }
 
     } catch (error) {
-        console.error('Error saving blog:', error);
-        alert(`Failed to ${isEditMode ? 'update' : 'create'} blog: ${error.message}`);
+        console.error('Error saving forum post:', error);
+        alert(`Failed to ${isEditMode ? 'update' : 'create'} forum post: ${error.message}`);
 
         saveButton.textContent = originalText;
         saveButton.disabled = false;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Create Blog | Sanctum</title>
+    <title id="page-title">Create Forum Post | Sanctum</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text x='50' y='35' text-anchor='middle' fill='%2300ff41' font-family='monospace' font-size='20' font-weight='bold'>S</text><text x='20' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>01</text><text x='50' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>10</text><text x='80' y='60' fill='%2300ff41' font-family='monospace' font-size='8'>11</text><text x='35' y='80' fill='%2300ff41' font-family='monospace' font-size='8'>01</text><text x='65' y='80' fill='%2300ff41' font-family='monospace' font-size='8'>10</text></svg>">
     <link rel="stylesheet" href="/theme.css">
     <style>
@@ -28,7 +28,7 @@
             font-weight: bold;
         }
 
-        .form-input, .form-textarea {
+        .form-input, .form-textarea, .form-select {
             width: 100%;
             padding: 0.75rem;
             background: #000000;
@@ -44,7 +44,7 @@
             resize: vertical;
         }
 
-        .form-input:focus, .form-textarea:focus {
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
             border-color: #00ff41;
             box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
@@ -95,8 +95,8 @@
             <div class="header-left">
                 <button class="logo" onclick="window.location.href='/'">Sanctum</button>
                 <nav class="nav-menu">
-                    <a href="/blog" class="nav-item active">Blogs</a>
-                    <a href="/forum" class="nav-item">Forums</a>
+                    <a href="/blog" class="nav-item">Blogs</a>
+                    <a href="/forum" class="nav-item active">Forums</a>
                 </nav>
             </div>
             <div class="user-auth-section">
@@ -114,17 +114,28 @@
         <div id="loading-container" class="loading">Loading...</div>
 
         <div id="edit-container" style="display: none;">
-            <h2 id="page-heading" style="color: #00ff41; font-family: 'Courier New', monospace; margin-bottom: 2rem;">Create New Blog</h2>
+            <h2 id="page-heading" style="color: #00ff41; font-family: 'Courier New', monospace; margin-bottom: 2rem;">Create New Forum Post</h2>
 
-            <form id="blog-form" class="edit-form">
+            <form id="forum-form" class="edit-form">
                 <div class="form-group">
-                    <label for="blog-title" class="form-label">Title:</label>
-                    <input type="text" id="blog-title" class="form-input" placeholder="Enter blog title..." required>
+                    <label for="forum-category" class="form-label">Category:</label>
+                    <select id="forum-category" class="form-select" required>
+                        <option value="">Select a category...</option>
+                        <option value="general-discussion">General Discussion</option>
+                        <option value="announcements">Announcements</option>
+                        <option value="support">Support</option>
+                        <option value="feedback">Feedback</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="blog-body" class="form-label">Content:</label>
-                    <textarea id="blog-body" class="form-textarea" placeholder="Write your blog content here..." required></textarea>
+                    <label for="forum-title" class="form-label">Title:</label>
+                    <input type="text" id="forum-title" class="form-input" placeholder="Enter post title..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="forum-body" class="form-label">Content:</label>
+                    <textarea id="forum-body" class="form-textarea" placeholder="Write your forum post here..." required></textarea>
                 </div>
 
                 <div class="form-group">
@@ -136,17 +147,17 @@
 
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
-                    <button type="submit" class="btn-save">Save Blog</button>
+                    <button type="submit" class="btn-save">Save Post</button>
                 </div>
             </form>
         </div>
 
         <div id="error-container" style="display: none; color: red; text-align: center; margin: 2rem;">
             <p id="error-message"></p>
-            <p><a href="/blogs">← Back to Blogs</a></p>
+            <p><a href="/forums">← Back to Forums</a></p>
         </div>
     </div>
 
-    <script src="/blog-edit.js"></script>
+    <script src="/forum-edit.js"></script>
 </body>
 </html>

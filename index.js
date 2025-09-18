@@ -6,7 +6,12 @@ const session = require('express-session');
 const winston = require('winston');
 
 const database = require('./lib/database');
-const oidcAuth = require('./lib/oidc-auth');
+
+// Use bypass auth in development, OIDC in production
+const authModule = process.env.BYPASS_OIDC === 'true'
+  ? require('./lib/bypass-auth')
+  : require('./lib/oidc-auth');
+
 const contentRoutes = require('./routes/content');
 
 const logger = winston.createLogger({
@@ -47,24 +52,29 @@ app.use(express.static('public'));
 // Auth routes at root level
 app.get('/login', (req, res, next) => {
   logger.info('Login route accessed', {
+    bypassMode: process.env.BYPASS_OIDC === 'true',
     sessionId: req.sessionID,
     userAgent: req.get('User-Agent'),
     query: req.query
   });
-  oidcAuth.redirectToLogin(req, res);
+  authModule.redirectToLogin(req, res);
 });
 
-// OIDC callback handler
+// Callback handler (OIDC or bypass)
 app.get('/callback', async (req, res) => {
-  await oidcAuth.handleCallback(req, res);
+  await authModule.handleCallback(req, res);
+});
+
+app.post('/callback', async (req, res) => {
+  await authModule.handleCallback(req, res);
 });
 
 app.post('/logout', (req, res) => {
-  oidcAuth.handleLogout(req, res);
+  authModule.handleLogout(req, res);
 });
 
 app.get('/user', async (req, res) => {
-  const user = oidcAuth.getCurrentUser(req);
+  const user = authModule.getCurrentUser(req);
   if (!user) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
@@ -110,7 +120,7 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
-app.put('/api/settings', oidcAuth.requireOidcAuth('admin'), async (req, res) => {
+app.put('/api/settings', authModule.requireOidcAuth('admin'), async (req, res) => {
     try {
       const { name, description } = req.body;
 
@@ -189,20 +199,86 @@ app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/public/admin.html');
 });
 
+// === NEW CLEAN URL STRUCTURE ===
 
-// Blog creation page
-app.get('/blogs/create', (req, res) => {
+// Blog routes
+app.get('/blog', (req, res) => {
+  res.sendFile(__dirname + '/public/blogs.html');
+});
+
+app.get('/blog/top', (req, res) => {
+  res.sendFile(__dirname + '/public/blogs.html');
+});
+
+app.get('/blog/create', (req, res) => {
   res.sendFile(__dirname + '/public/blog-edit.html');
 });
 
-// Blog edit page
-app.get('/blogs/edit/:id', (req, res) => {
+app.get('/blog/edit/:id', (req, res) => {
   res.sendFile(__dirname + '/public/blog-edit.html');
 });
 
-// Individual blog post view (must come after specific routes)
-app.get('/blogs/:id', (req, res) => {
+app.get('/blog/view/:id', (req, res) => {
   res.sendFile(__dirname + '/public/blog-post.html');
+});
+
+// Forum routes
+app.get('/forum', (req, res) => {
+  res.sendFile(__dirname + '/public/forums.html');
+});
+
+app.get('/forum/category/:category', (req, res) => {
+  res.sendFile(__dirname + '/public/forums.html');
+});
+
+app.get('/forum/category/:category/top', (req, res) => {
+  res.sendFile(__dirname + '/public/forums.html');
+});
+
+app.get('/forum/create/:category', (req, res) => {
+  res.sendFile(__dirname + '/public/forum-edit.html');
+});
+
+app.get('/forum/edit/:id', (req, res) => {
+  res.sendFile(__dirname + '/public/forum-edit.html');
+});
+
+app.get('/forum/view/:id', (req, res) => {
+  res.sendFile(__dirname + '/public/forum-post.html');
+});
+
+// === LEGACY URL REDIRECTS (temporary) ===
+
+app.get('/blogs', (req, res) => {
+  res.redirect(301, '/blog');
+});
+
+app.get('/forums', (req, res) => {
+  res.redirect(301, '/forum');
+});
+
+app.get('/blogs/create', (req, res) => {
+  res.redirect(301, '/blog/create');
+});
+
+app.get('/blogs/edit/:id', (req, res) => {
+  res.redirect(301, `/blog/edit/${req.params.id}`);
+});
+
+app.get('/blogs/:id', (req, res) => {
+  res.redirect(301, `/blog/view/${req.params.id}`);
+});
+
+app.get('/forums/create', (req, res) => {
+  res.redirect(301, '/forum/create/general');
+});
+
+app.get('/forums/edit/:id', (req, res) => {
+  res.redirect(301, `/forum/edit/${req.params.id}`);
+});
+
+app.get('/forums/:id', (req, res) => {
+  res.redirect(301, `/forum/view/${req.params.id}`);
 });
 
 app.get('/api', (req, res) => {
