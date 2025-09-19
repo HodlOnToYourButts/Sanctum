@@ -29,7 +29,8 @@ const pageSchema = Joi.object({
   title: Joi.string().required(),
   body: Joi.string().required(),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
-  promoted: Joi.boolean().default(false)
+  promoted: Joi.boolean().default(false),
+  enabled: Joi.boolean().default(true)
 });
 
 const blogSchema = Joi.object({
@@ -38,8 +39,8 @@ const blogSchema = Joi.object({
   body: Joi.string().required(),
   tags: Joi.array().items(Joi.string()).default([]),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
-  allow_comments: Joi.boolean().default(true),
-  promoted: Joi.boolean().default(false)
+  promoted: Joi.boolean().default(false),
+  enabled: Joi.boolean().default(true)
 });
 
 const forumSchema = Joi.object({
@@ -49,9 +50,9 @@ const forumSchema = Joi.object({
   body: Joi.string().required(),
   tags: Joi.array().items(Joi.string()).default([]),
   status: Joi.string().valid('draft', 'published', 'archived').default('published'),
-  allow_comments: Joi.boolean().default(true),
   promoted: Joi.boolean().default(false),
-  pinned: Joi.boolean().default(false)
+  pinned: Joi.boolean().default(false),
+  enabled: Joi.boolean().default(true)
 });
 
 const contentSchema = Joi.alternatives().try(pageSchema, blogSchema, forumSchema);
@@ -140,11 +141,17 @@ router.get('/feed', async (req, res) => {
       limit: 100 // Get more docs to filter from
     });
 
+    // Check if user is moderator for filtering disabled content
+    const isUserModerator = req.user && req.user.roles && (req.user.roles.includes('admin') || req.user.roles.includes('moderator'));
+
     // Filter and process results
     let items = result.docs
       .filter(doc => {
         // Only include published content
         if (doc.status !== 'published') return false;
+
+        // Hide disabled content from non-moderators
+        if (doc.enabled === false && !isUserModerator) return false;
 
         // Filter by type and promotion status
         if (type && type !== 'all') {
@@ -203,7 +210,7 @@ router.get('/feed', async (req, res) => {
 
     // Calculate comment/reply counts for items that allow comments
     for (let item of items) {
-      if (item.allow_comments && ['blog', 'forum'].includes(item.type)) {
+      if (['blog', 'forum'].includes(item.type)) {
         try {
           // Use different types for different content types
           const responseType = item.type === 'forum' ? 'reply' : 'comment';
@@ -247,8 +254,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
+    // Check if content is disabled and user is not a moderator
+    const isUserModerator = req.user && req.user.roles && (req.user.roles.includes('admin') || req.user.roles.includes('moderator'));
+    if (content.enabled === false && !isUserModerator) {
+      return res.status(404).json({ error: 'Content not found' });
+    }
+
     // Calculate comment/reply count for this content
-    if (content.allow_comments && ['blog', 'forum'].includes(content.type)) {
+    if (['blog', 'forum'].includes(content.type)) {
       try {
         const responseType = content.type === 'forum' ? 'reply' : 'comment';
         const responseResult = await db.find({
@@ -329,6 +342,10 @@ router.post('/', requireOidcAuth(), async (req, res) => {
       voter_list: [] // Track who voted to prevent duplicate votes
     };
 
+    // Always enable comments for all content
+    content.allow_comments = true;
+
+
     const result = await db.insert(content);
     content._id = result.id;
     content._rev = result.rev;
@@ -362,7 +379,7 @@ router.put('/:id', requireOidcAuth(), async (req, res) => {
     }
 
     // Check if user can edit this content (author, admin, or moderator)
-    const isAuthor = existingContent.author_id === req.user.id;
+    const isAuthor = existingContent.author?.id === req.user.id;
     const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
 
     if (!isAuthor && !isModerator) {
@@ -650,6 +667,12 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
+    // Check if content is disabled and user is not a moderator
+    const isUserModerator = req.user && req.user.roles && (req.user.roles.includes('admin') || req.user.roles.includes('moderator'));
+    if (content.enabled === false && !isUserModerator) {
+      return res.status(404).json({ error: 'Content not found' });
+    }
+
     // Transform the content to match frontend expectations
     const transformedContent = {
       ...content,
@@ -822,7 +845,8 @@ const replySchema = Joi.object({
   content: Joi.string().required().min(1).max(2000), // Longer replies allowed
   author_name: Joi.string().required().min(1).max(100),
   author_email: Joi.string().email({ tlds: { allow: false } }).optional(), // Allow any TLD including .local
-  author_roles: Joi.array().items(Joi.string()).optional()
+  author_roles: Joi.array().items(Joi.string()).optional(),
+  enabled: Joi.boolean().default(true)
 });
 
 // Get replies for a specific forum post
@@ -837,9 +861,6 @@ router.get('/:id/replies', async (req, res) => {
       return res.status(400).json({ error: 'Replies only available for forum posts' });
     }
 
-    if (!content.allow_comments) {
-      return res.status(403).json({ error: 'Replies are disabled for this post' });
-    }
 
     // Find replies for this forum post
     const result = await db.find({
@@ -851,8 +872,19 @@ router.get('/:id/replies', async (req, res) => {
     });
 
     // Sort replies in JavaScript and only show approved/pending
+    // Also filter out disabled replies unless user is admin/moderator
+    const isUserModerator = req.user && req.user.roles && (req.user.roles.includes('admin') || req.user.roles.includes('moderator'));
+
     let replies = result.docs
-      .filter(doc => doc.status === 'approved' || doc.status === 'pending')
+      .filter(doc => {
+        // Only show approved/pending replies
+        if (doc.status !== 'approved' && doc.status !== 'pending') return false;
+
+        // Show disabled replies only to moderators
+        if (doc.enabled === false && !isUserModerator) return false;
+
+        return true;
+      })
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     res.json(replies);
@@ -887,9 +919,6 @@ router.post('/:id/replies', async (req, res) => {
       return res.status(400).json({ error: 'Replies only available for forum posts' });
     }
 
-    if (!content.allow_comments) {
-      return res.status(403).json({ error: 'Replies are disabled for this post' });
-    }
 
     const reply = {
       type: 'reply',
@@ -924,6 +953,56 @@ router.post('/:id/replies', async (req, res) => {
   }
 });
 
+// Update a reply (for enabling/disabling)
+router.put('/replies/:replyId', requireOidcAuth(), async (req, res) => {
+  try {
+    const { error, value } = replySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    await database.connect();
+    const db = database.getDb();
+    const reply = await db.get(req.params.replyId);
+
+    if (reply.type !== 'reply') {
+      return res.status(404).json({ error: 'Reply not found' });
+    }
+
+    // Check if user can edit this reply (author or moderator)
+    const isAuthor = reply.author_name === req.user.name || reply.author_email === req.user.email;
+    const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
+
+    if (!isAuthor && !isModerator) {
+      return res.status(403).json({ error: 'Cannot edit reply by another user' });
+    }
+
+    const updatedReply = {
+      ...reply,
+      ...value,
+      updated_at: new Date().toISOString()
+    };
+
+    const result = await db.insert(updatedReply);
+    updatedReply._rev = result.rev;
+
+    logger.info('Reply updated', {
+      replyId: updatedReply._id,
+      userId: req.user.id,
+      enabled: updatedReply.enabled
+    });
+
+    res.json(updatedReply);
+  } catch (error) {
+    if (error.statusCode === 404) {
+      res.status(404).json({ error: 'Reply not found' });
+    } else {
+      logger.error('Error updating reply', { id: req.params.replyId, error: error.message });
+      res.status(500).json({ error: 'Failed to update reply' });
+    }
+  }
+});
+
 // Get user statistics (post count, join date, etc.)
 router.get('/user/:identifier/stats', async (req, res) => {
   try {
@@ -942,6 +1021,10 @@ router.get('/user/:identifier/stats', async (req, res) => {
         ]
       }
     });
+
+    // Separate forum and blog counts
+    const forumPosts = postResult.docs.filter(doc => doc.type === 'forum');
+    const blogPosts = postResult.docs.filter(doc => doc.type === 'blog');
 
     // Count replies by this user
     const replyResult = await db.find({
@@ -971,6 +1054,8 @@ router.get('/user/:identifier/stats', async (req, res) => {
 
     const stats = {
       posts: postResult.docs.length,
+      forum_posts: forumPosts.length,
+      blog_posts: blogPosts.length,
       replies: replyResult.docs.length,
       comments: commentResult.docs.length,
       total_activity: postResult.docs.length + replyResult.docs.length + commentResult.docs.length,

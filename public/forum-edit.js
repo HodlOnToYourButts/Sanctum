@@ -121,7 +121,6 @@ async function loadPostForEdit() {
         document.getElementById('forum-category').value = post.category || '';
         document.getElementById('forum-title').value = post.title || '';
         document.getElementById('forum-body').value = post.body || '';
-        document.getElementById('allow-comments').checked = post.allow_comments !== false;
 
         showEditForm();
 
@@ -158,7 +157,6 @@ document.getElementById('forum-form').addEventListener('submit', async (e) => {
     const category = document.getElementById('forum-category').value;
     const title = document.getElementById('forum-title').value.trim();
     const body = document.getElementById('forum-body').value.trim();
-    const allowComments = document.getElementById('allow-comments').checked;
 
     if (!category || !title || !body) {
         alert('Please fill in all required fields.');
@@ -176,7 +174,6 @@ document.getElementById('forum-form').addEventListener('submit', async (e) => {
             category: category,
             title: title,
             body: body,
-            allow_comments: allowComments,
             status: 'published'
         };
 

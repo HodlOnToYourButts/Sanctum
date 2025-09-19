@@ -188,22 +188,6 @@ function updateAdminActions() {
 
     let actionsHtml = '';
 
-    if (isModerator) {
-        if (currentPost.featured) {
-            actionsHtml += `
-                <button class="admin-btn admin-btn-action admin-btn-demote" onclick="demoteFromFrontPage()" title="Remove from front page">
-                    DEMOTE
-                </button>
-            `;
-        } else {
-            actionsHtml += `
-                <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage()" title="Promote to front page">
-                    PROMOTE
-                </button>
-            `;
-        }
-    }
-
     if (canEdit) {
         actionsHtml += `
             <button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editPost()" title="Edit post">
@@ -222,6 +206,22 @@ function updateAdminActions() {
             actionsHtml += `
                 <button class="admin-btn admin-btn-action" onclick="togglePostEnabled(true)" title="Enable post">
                     ENABLE
+                </button>
+            `;
+        }
+    }
+
+    if (isModerator) {
+        if (currentPost.featured) {
+            actionsHtml += `
+                <button class="admin-btn admin-btn-action admin-btn-demote" onclick="demoteFromFrontPage()" title="Remove from front page">
+                    DEMOTE
+                </button>
+            `;
+        } else {
+            actionsHtml += `
+                <button class="admin-btn admin-btn-action" onclick="promoteToFrontPage()" title="Promote to front page">
+                    PROMOTE
                 </button>
             `;
         }
@@ -268,12 +268,18 @@ async function vote(direction) {
 
 function toggleComments() {
     const commentsSection = document.getElementById('comments-section');
+    const contentActions = document.getElementById('content-actions');
+
     // Since comments are now visible by default, we need to check the computed style or use a different approach
     const isVisible = commentsSection.style.display !== 'none';
     if (isVisible) {
         commentsSection.style.display = 'none';
+        // Remove the comments-expanded class to round bottom corners of content-actions
+        contentActions.classList.remove('comments-expanded');
     } else {
         commentsSection.style.display = 'block';
+        // Add the comments-expanded class to make content-actions corners straight
+        contentActions.classList.add('comments-expanded');
     }
 }
 
@@ -409,6 +415,12 @@ async function togglePostEnabled(enable) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                type: currentPost.type,
+                title: currentPost.title,
+                body: currentPost.body,
+                tags: currentPost.tags || [],
+                status: currentPost.status || 'published',
+                promoted: currentPost.promoted || false,
                 enabled: enable
             })
         });

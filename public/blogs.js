@@ -109,18 +109,20 @@ function displayContentFeed(contentList) {
     if (contentList.length === 0) {
         container.innerHTML = `
             <div class="content-item page-blogs">
-                <div class="sort-options">
-                    <div class="terminal-subtitle">Blogs</div>
-                    <div>
-                        <button id="create-blog-btn-no-content" class="btn-create" onclick="createNewBlog()" style="display: none;">
-                            CREATE
-                        </button>
-                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
-                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                <div class="blogs-content-container">
+                    <div class="sort-options">
+                        <div class="terminal-subtitle">Blogs</div>
+                        <div>
+                            <button id="create-blog-btn-no-content" class="btn-create" onclick="createNewBlog()" style="display: none;">
+                                Create
+                            </button>
+                            <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                            <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                        </div>
                     </div>
-                </div>
-                <div class="no-content-message">
-                    // NO BLOGS FOUND
+                    <div class="no-content-message">
+                        // NO BLOGS FOUND
+                    </div>
                 </div>
             </div>
         `;
@@ -140,16 +142,17 @@ function displayContentFeed(contentList) {
     // Create a single terminal window containing all content
     let terminalContent = `
         <div class="content-item page-blogs">
-            <div class="sort-options">
-                <div class="terminal-subtitle">Blogs</div>
-                <div>
-                    <button id="create-blog-btn-content" class="btn-create" onclick="createNewBlog()" style="display: none;">
-                        CREATE
-                    </button>
-                    <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
-                    <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+            <div class="blogs-content-container">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">Blogs</div>
+                    <div>
+                        <button id="create-blog-btn-content" class="btn-create" onclick="createNewBlog()" style="display: none;">
+                            Create
+                        </button>
+                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
                 </div>
-            </div>
     `;
 
     // Add all content items inside the single terminal
@@ -179,7 +182,7 @@ function displayContentFeed(contentList) {
         `;
     }).join('');
 
-    terminalContent += '</div>';
+    terminalContent += '</div></div>';
     container.innerHTML = terminalContent;
 
     // Show create buttons if user is logged in
@@ -236,8 +239,18 @@ function getUserVote(contentId) {
 }
 
 function setSort(sort) {
-    const sortPath = sort === 'top' ? '/top' : '';
-    window.location.href = `/blogs${sortPath}`;
+    currentSort = sort;
+
+    // Update sort button active state
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.sort === sort) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Reload content with new sort
+    loadContentFeed();
 }
 
 function escapeHtml(text) {
@@ -443,6 +456,10 @@ function initializeView() {
     }
 
     // Update sort button active state
+    updateSortButtons();
+}
+
+function updateSortButtons() {
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.sort === currentSort) {

@@ -100,15 +100,17 @@ function displayContentFeed(contentList) {
     if (contentList.length === 0) {
         container.innerHTML = `
             <div class="content-item page-home">
-                <div class="sort-options">
-                    <div class="terminal-subtitle">Home</div>
-                    <div>
-                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
-                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                <div class="home-content-container">
+                    <div class="sort-options">
+                        <div class="terminal-subtitle">Home</div>
+                        <div>
+                            <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                            <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                        </div>
                     </div>
-                </div>
-                <div class="no-content-message">
-                    // NO FEATURED CONTENT FOUND
+                    <div class="no-content-message">
+                        // NO CONTENT FOUND
+                    </div>
                 </div>
             </div>
         `;
@@ -118,13 +120,14 @@ function displayContentFeed(contentList) {
     // Create a single terminal window containing all content
     let terminalContent = `
         <div class="content-item page-home">
-            <div class="sort-options">
-                <div class="terminal-subtitle">Home</div>
-                <div>
-                    <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
-                    <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+            <div class="home-content-container">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">Home</div>
+                    <div>
+                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
                 </div>
-            </div>
     `;
 
     // Add all content items inside the single terminal
@@ -154,7 +157,7 @@ function displayContentFeed(contentList) {
         `;
     }).join('');
 
-    terminalContent += '</div>';
+    terminalContent += '</div></div>';
     container.innerHTML = terminalContent;
 
     // Restore open comment sections after rebuilding

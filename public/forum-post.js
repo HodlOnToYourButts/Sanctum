@@ -121,9 +121,7 @@ async function loadPost() {
         currentPost = await response.json();
         displayPost();
 
-        if (currentPost.allow_comments) {
-            loadComments();
-        }
+        loadComments();
 
         document.getElementById('loading-container').style.display = 'none';
         document.getElementById('post-container').style.display = 'block';
@@ -298,7 +296,7 @@ function updateCommentForm() {
     const commentForm = document.getElementById('comment-form');
     const commentsSection = document.getElementById('comments-section');
 
-    if (currentPost && currentPost.allow_comments) {
+    if (currentPost) {
         commentsSection.style.display = 'block';
         if (currentUser) {
             commentForm.style.display = 'block';
@@ -360,14 +358,7 @@ function updateAdminActions() {
             }
         }
 
-        // Enable/Disable post button (for authors and moderators)
-        if (isAuthor || isModerator) {
-            if (currentPost.enabled !== false) {
-                actions += '<button class="admin-btn admin-btn-action admin-btn-disable" onclick="togglePostEnabled(false)">DISABLE</button>';
-            } else {
-                actions += '<button class="admin-btn admin-btn-action" onclick="togglePostEnabled(true)">ENABLE</button>';
-            }
-        }
+        // Enable/Disable button moved to edit action area
     } else {
         console.log('No currentUser or currentPost:', !!currentUser, !!currentPost);
     }
@@ -404,6 +395,15 @@ function updateEditAction() {
 
         if (isAuthor || isModerator) {
             editAction = '<button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editPost()">Edit</button>';
+
+            // Add Disable/Enable button next to Edit
+            // Authors can only disable, admins/moderators can enable/disable
+            if (currentPost.enabled !== false) {
+                editAction += '<button class="admin-btn-action-inline admin-btn-disable" onclick="togglePostEnabled(false)">Disable</button>';
+            } else if (isModerator) {
+                // Only moderators can enable disabled posts
+                editAction += '<button class="admin-btn-action-inline" onclick="togglePostEnabled(true)">Enable</button>';
+            }
         }
     }
 
@@ -579,6 +579,9 @@ function displayComments(comments) {
                     <div class="reply-meta-bar">
                         <div class="reply-edit-action">
                             ${canEditReply ? '<button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editReply(\'' + comment._id + '\')">Edit</button>' : ''}
+                            ${canEditReply ? (comment.enabled !== false ?
+                                '<button class="admin-btn-action-inline admin-btn-disable" onclick="toggleReplyEnabled(\'' + comment._id + '\', false)">Disable</button>' :
+                                (isModerator ? '<button class="admin-btn-action-inline" onclick="toggleReplyEnabled(\'' + comment._id + '\', true)">Enable</button>' : '')) : ''}
                         </div>
                         <div class="reply-date-info">
                             <span class="reply-date">${commentDate.toLocaleString()}</span>
@@ -652,7 +655,7 @@ async function loadAuthorStats(authorName) {
         const response = await fetch(`/api/content/user/${encodeURIComponent(authorName)}/stats`);
         if (response.ok) {
             const stats = await response.json();
-            document.getElementById('author-posts').textContent = stats.total_activity;
+            document.getElementById('author-posts').textContent = stats.forum_posts;
         } else {
             document.getElementById('author-posts').textContent = '—';
         }
@@ -671,7 +674,7 @@ async function loadReplyAuthorStats(authorName, index) {
             // Update posts count
             const postsElement = document.getElementById(`reply-author-posts-${index}`);
             if (postsElement) {
-                postsElement.textContent = stats.total_activity;
+                postsElement.textContent = stats.forum_posts;
             }
 
             // Update joined date
@@ -741,6 +744,10 @@ async function togglePostEnabled(enable) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                type: currentPost.type,
+                category: currentPost.category,
+                title: currentPost.title,
+                body: currentPost.body,
                 enabled: enable
             })
         });
@@ -757,6 +764,44 @@ async function togglePostEnabled(enable) {
     } catch (error) {
         console.error('Error toggling post:', error);
         alert('Failed to update post setting. Please try again.');
+    }
+}
+
+async function toggleReplyEnabled(replyId, enable) {
+    try {
+        // Get the current reply data first
+        const replies = await (await fetch(`/api/content/${postId}/replies`)).json();
+        const reply = replies.find(r => r._id === replyId);
+
+        if (!reply) {
+            alert('Reply not found');
+            return;
+        }
+
+        const response = await fetch(`/api/content/replies/${replyId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: reply.content,
+                author_name: reply.author_name,
+                author_email: reply.author_email,
+                author_roles: reply.author_roles || [],
+                enabled: enable
+            })
+        });
+
+        if (response.ok) {
+            alert(`Reply ${enable ? 'enabled' : 'disabled'} successfully!`);
+            await loadComments(); // Refresh replies
+        } else {
+            const error = await response.json();
+            alert(`Failed to ${enable ? 'enable' : 'disable'} reply: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error toggling reply:', error);
+        alert('Failed to update reply setting. Please try again.');
     }
 }
 

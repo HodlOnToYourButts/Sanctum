@@ -167,12 +167,14 @@ function displayCategories(categories) {
     if (categories.length === 0) {
         container.innerHTML = `
             <div class="content-item page-forums">
-                <div class="sort-options forums-categories-header">
-                    <div class="terminal-subtitle">Forums</div>
-                    <div></div>
-                </div>
-                <div class="no-content-message">
-                    // NO CATEGORIES FOUND
+                <div class="forums-content-container">
+                    <div class="sort-options forums-categories-header">
+                        <div class="terminal-subtitle">Forums</div>
+                        <div></div>
+                    </div>
+                    <div class="no-content-message">
+                        // NO CATEGORIES FOUND
+                    </div>
                 </div>
             </div>
         `;
@@ -182,11 +184,12 @@ function displayCategories(categories) {
     // Create a single terminal window containing all categories
     let terminalContent = `
         <div class="content-item page-forums">
-            <div class="sort-options forums-categories-header">
-                <div class="terminal-subtitle">Forums</div>
-                <div></div>
-            </div>
-            <div class="category-grid">
+            <div class="forums-content-container">
+                <div class="sort-options forums-categories-header">
+                    <div class="terminal-subtitle">Forums</div>
+                    <div></div>
+                </div>
+                <div class="category-grid">
     `;
 
     terminalContent += categories.map(category => {
@@ -206,7 +209,7 @@ function displayCategories(categories) {
         `;
     }).join('');
 
-    terminalContent += '</div></div>';
+    terminalContent += '</div></div></div>';
     container.innerHTML = terminalContent;
 }
 
@@ -252,18 +255,20 @@ function displayForumPosts(postsList) {
     if (postsList.length === 0) {
         container.innerHTML = `
             <div class="content-item page-forums">
-                <div class="sort-options">
-                    <div class="terminal-subtitle">${categoryMappings[currentCategory]?.name || 'Forums'}</div>
-                    <div>
-                        <button id="create-post-btn-no-content" class="btn-create" onclick="createNewPost()" style="display: none;">
-                            Create Post
-                        </button>
-                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
-                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                <div class="forums-content-container">
+                    <div class="sort-options">
+                        <div class="terminal-subtitle">${categoryMappings[currentCategory]?.name || 'Forums'}</div>
+                        <div>
+                            <button id="create-post-btn-no-content" class="btn-create" onclick="createNewPost()" style="display: none;">
+                                Create
+                            </button>
+                            <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                            <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                        </div>
                     </div>
-                </div>
-                <div class="no-content-message">
-                    // NO POSTS FOUND
+                    <div class="no-content-message">
+                        // NO FORUMS FOUND
+                    </div>
                 </div>
             </div>
         `;
@@ -294,24 +299,25 @@ function displayForumPosts(postsList) {
     // Add sort buttons with terminal subtitle and forum table inside terminal
     let forumHTML = `
         <div class="content-item page-forums">
-            <div class="sort-options">
-                <div class="terminal-subtitle">${categoryMappings[currentCategory]?.name || 'Forums'}</div>
-                <div>
-                    <button id="create-post-btn-content" class="btn-create" onclick="createNewPost()" style="display: none;">
-                        Create Post
-                    </button>
-                    <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
-                    <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+            <div class="forums-content-container">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">${categoryMappings[currentCategory]?.name || 'Forums'}</div>
+                    <div>
+                        <button id="create-post-btn-content" class="btn-create" onclick="createNewPost()" style="display: none;">
+                            Create
+                        </button>
+                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
                 </div>
-            </div>
-            <div class="forum-table">
-                <div class="forum-table-header">
-                    <div class="forum-col-votes"></div>
-                    <div class="forum-col-topic">TOPIC</div>
-                    <div class="forum-col-author">AUTHOR</div>
-                    <div class="forum-col-replies">REPLIES</div>
-                    <div class="forum-col-activity">LAST ACTIVITY</div>
-                </div>
+                <div class="forum-table">
+                    <div class="forum-table-header">
+                        <div class="forum-col-votes"></div>
+                        <div class="forum-col-topic">TOPIC</div>
+                        <div class="forum-col-author">AUTHOR</div>
+                        <div class="forum-col-replies">REPLIES</div>
+                        <div class="forum-col-activity">LAST ACTIVITY</div>
+                    </div>
     `;
 
     forumHTML += sortedPosts.map(item => {
@@ -360,7 +366,7 @@ function displayForumPosts(postsList) {
         `;
     }).join('');
 
-    forumHTML += '</div></div>';
+    forumHTML += '</div></div></div>';
     container.innerHTML = forumHTML;
 
     // Show create buttons if user is logged in
@@ -609,9 +615,18 @@ async function unpinPost(postId) {
 
 function setSort(sort) {
     if (currentCategory) {
-        const categorySlug = categoryMappings[currentCategory]?.slug || currentCategory;
-        const sortPath = sort === 'top' ? '/top' : '';
-        window.location.href = `/forums/category/${categorySlug}${sortPath}`;
+        currentSort = sort;
+
+        // Update sort button active state
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.sort === sort) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Reload forum posts with new sort
+        loadForumPosts();
     }
 }
 
@@ -643,12 +658,11 @@ function initializeView() {
         showCategoriesView();
         loadCategories();
     } else if (pathParts.length >= 3 && pathParts[0] === 'forums' && pathParts[1] === 'category') {
-        // /forums/category/general-discussion or /forums/category/general-discussion/top
+        // /forums/category/general-discussion (ignore any /top path for AJAX compatibility)
         const categorySlug = pathParts[2];
-        const sortType = pathParts[3] || 'new';
 
         currentCategory = slugToCategory[categorySlug] || categorySlug;
-        currentSort = sortType === 'top' ? 'top' : 'new';
+        currentSort = 'new'; // Always start with 'new' sort
 
         showForumView(categorySlug);
         loadForumPosts();
