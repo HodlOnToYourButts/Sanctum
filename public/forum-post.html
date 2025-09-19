@@ -29,11 +29,18 @@
     </div>
 
     <div class="container">
-        <div id="loading-container" class="loading">Loading forum post...</div>
+        <div id="loading-container">
+            <div class="content-item page-forums">
+                <div class="no-content-message">
+                    // LOADING...
+                </div>
+            </div>
+        </div>
 
         <div id="post-container" style="display: none;">
             <!-- Forum Post -->
-            <div class="forum-post-container">
+            <div class="content-item page-forums">
+                <div class="forum-post-container">
                 <div class="forum-post-header">
                     <div class="forum-post-title-section">
                         <a href="#" class="forum-post-category" id="post-category-header"></a>
@@ -97,10 +104,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Comments/Replies Section -->
-            <div id="comments-section" class="forum-replies-section" style="display: none;">
+                <!-- Comments/Replies Section -->
+                <div id="comments-section" class="forum-replies-section" style="display: none;">
                 <div class="replies-header">
                     <h3 class="replies-title">
                         <span id="post-actions">
@@ -125,6 +131,8 @@
                 <!-- Replies List -->
                 <div id="comments-list" class="replies-list">
                     <div class="loading">Loading replies...</div>
+                </div>
+                </div>
                 </div>
             </div>
         </div>

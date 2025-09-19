@@ -29,17 +29,20 @@
     </div>
 
     <div class="container">
-        <div class="content-header">
-            <div class="forum-header-left">
-                <h2>Home</h2>
-            </div>
-            <div class="sort-options">
-                <button class="sort-btn active" data-sort="new">New</button>
-                <button class="sort-btn" data-sort="top">Top</button>
+        <div id="content-loading">
+            <div class="content-item page-home">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">Home</div>
+                    <div>
+                        <button class="sort-btn active" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
+                </div>
+                <div class="no-content-message">
+                    // LOADING...
+                </div>
             </div>
         </div>
-
-        <div id="content-loading" class="loading">Loading content...</div>
         <div id="content-feed" class="content-feed">
             <!-- Content will be displayed as a unified table -->
         </div>

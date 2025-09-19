@@ -34,8 +34,11 @@ function showLoggedInState(user) {
 
     document.getElementById('auth-section').innerHTML = authButtons;
 
-    // Show create blog button when logged in
-    document.getElementById('create-blog-btn').style.display = 'block';
+    // Show create blog buttons when logged in
+    const createButtons = document.querySelectorAll('[id^="create-blog-btn"]');
+    createButtons.forEach(btn => {
+        if (btn) btn.style.display = 'block';
+    });
 }
 
 function showLoggedOutState() {
@@ -43,8 +46,11 @@ function showLoggedOutState() {
     document.getElementById('auth-section').innerHTML =
         '<button class="auth-button" onclick="goToLogin()">Login</button>';
 
-    // Hide create blog button when logged out
-    document.getElementById('create-blog-btn').style.display = 'none';
+    // Hide create blog buttons when logged out
+    const createButtons = document.querySelectorAll('[id^="create-blog-btn"]');
+    createButtons.forEach(btn => {
+        if (btn) btn.style.display = 'none';
+    });
 }
 
 function goToLogin() {
@@ -101,18 +107,60 @@ function displayContentFeed(contentList) {
     const container = document.getElementById('content-feed');
 
     if (contentList.length === 0) {
-        container.innerHTML = '<p class="loading" style="text-align: center;">No blogs found.</p>';
+        container.innerHTML = `
+            <div class="content-item page-blogs">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">Blogs</div>
+                    <div>
+                        <button id="create-blog-btn-no-content" class="btn-create" onclick="createNewBlog()" style="display: none;">
+                            CREATE
+                        </button>
+                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
+                </div>
+                <div class="no-content-message">
+                    // NO BLOGS FOUND
+                </div>
+            </div>
+        `;
+
+        // Show create buttons if user is logged in
+        if (currentUser) {
+            setTimeout(() => {
+                const createButtons = document.querySelectorAll('[id^="create-blog-btn"]');
+                createButtons.forEach(btn => {
+                    if (btn) btn.style.display = 'block';
+                });
+            }, 0);
+        }
         return;
     }
 
-    container.innerHTML = contentList.map(item => {
+    // Create a single terminal window containing all content
+    let terminalContent = `
+        <div class="content-item page-blogs">
+            <div class="sort-options">
+                <div class="terminal-subtitle">Blogs</div>
+                <div>
+                    <button id="create-blog-btn-content" class="btn-create" onclick="createNewBlog()" style="display: none;">
+                        CREATE
+                    </button>
+                    <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                    <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                </div>
+            </div>
+    `;
+
+    // Add all content items inside the single terminal
+    terminalContent += contentList.map((item, index) => {
         const userVote = getUserVote(item._id);
         const isAuthor = currentUser && currentUser.id === item.author_id;
         const isModerator = currentUser && (currentUser.roles.includes('admin') || currentUser.roles.includes('moderator'));
         const canEdit = isAuthor || isModerator;
 
         return `
-            <div class="content-item">
+            <div class="content-entry content-entry-blog">
                 <div class="content-header-item">
                     <div class="blog-title-section">
                         <span class="vote-score-left">${item.votes.score}</span>
@@ -130,6 +178,17 @@ function displayContentFeed(contentList) {
             </div>
         `;
     }).join('');
+
+    terminalContent += '</div>';
+    container.innerHTML = terminalContent;
+
+    // Show create buttons if user is logged in
+    if (currentUser) {
+        const createButtons = document.querySelectorAll('[id^="create-blog-btn"]');
+        createButtons.forEach(btn => {
+            if (btn) btn.style.display = 'block';
+        });
+    }
 }
 
 // Track user votes locally for undo functionality

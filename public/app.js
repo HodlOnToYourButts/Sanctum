@@ -98,18 +98,44 @@ function displayContentFeed(contentList) {
     const container = document.getElementById('content-feed');
 
     if (contentList.length === 0) {
-        container.innerHTML = '<p class="loading" style="text-align: center;">No content found.</p>';
+        container.innerHTML = `
+            <div class="content-item page-home">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">Home</div>
+                    <div>
+                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
+                </div>
+                <div class="no-content-message">
+                    // NO FEATURED CONTENT FOUND
+                </div>
+            </div>
+        `;
         return;
     }
 
-    container.innerHTML = contentList.map(item => {
+    // Create a single terminal window containing all content
+    let terminalContent = `
+        <div class="content-item page-home">
+            <div class="sort-options">
+                <div class="terminal-subtitle">Home</div>
+                <div>
+                    <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                    <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                </div>
+            </div>
+    `;
+
+    // Add all content items inside the single terminal
+    terminalContent += contentList.map((item, index) => {
         const userVote = getUserVote(item._id);
         const isAuthor = currentUser && currentUser.id === item.author_id;
         const isModerator = currentUser && (currentUser.roles.includes('admin') || currentUser.roles.includes('moderator'));
         const canEdit = isAuthor || isModerator;
 
         return `
-            <div class="content-item content-item-${item.type}">
+            <div class="content-entry content-entry-${item.type}">
                 <div class="content-header-item">
                     <div class="blog-title-section">
                         <span class="vote-score-left">${item.votes.score}</span>
@@ -127,6 +153,9 @@ function displayContentFeed(contentList) {
             </div>
         `;
     }).join('');
+
+    terminalContent += '</div>';
+    container.innerHTML = terminalContent;
 
     // Restore open comment sections after rebuilding
     openComments.forEach(contentId => {

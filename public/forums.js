@@ -50,10 +50,12 @@ function showLoggedInState(user) {
 
     document.getElementById('auth-section').innerHTML = authButtons;
 
-    // Show create post button when logged in and in forum view
-    const createPostBtn = document.getElementById('create-post-btn');
-    if (createPostBtn && currentCategory) {
-        createPostBtn.style.display = 'block';
+    // Show create post buttons when logged in and in forum view
+    if (currentCategory) {
+        const createButtons = document.querySelectorAll('[id^="create-post-btn"]');
+        createButtons.forEach(btn => {
+            if (btn) btn.style.display = 'block';
+        });
     }
 }
 
@@ -163,11 +165,31 @@ function displayCategories(categories) {
     const container = document.getElementById('categories-grid');
 
     if (categories.length === 0) {
-        container.innerHTML = '<p class="loading">No categories found.</p>';
+        container.innerHTML = `
+            <div class="content-item page-forums">
+                <div class="sort-options forums-categories-header">
+                    <div class="terminal-subtitle">Forums</div>
+                    <div></div>
+                </div>
+                <div class="no-content-message">
+                    // NO CATEGORIES FOUND
+                </div>
+            </div>
+        `;
         return;
     }
 
-    container.innerHTML = categories.map(category => {
+    // Create a single terminal window containing all categories
+    let terminalContent = `
+        <div class="content-item page-forums">
+            <div class="sort-options forums-categories-header">
+                <div class="terminal-subtitle">Forums</div>
+                <div></div>
+            </div>
+            <div class="category-grid">
+    `;
+
+    terminalContent += categories.map(category => {
         const categorySlug = categoryMappings[category.id]?.slug || category.id;
         return `
         <a href="/forums/category/${categorySlug}" class="category-card">
@@ -181,7 +203,11 @@ function displayCategories(categories) {
                     'No activity yet'}</span>
             </div>
         </a>
-    `;}).join('');
+        `;
+    }).join('');
+
+    terminalContent += '</div></div>';
+    container.innerHTML = terminalContent;
 }
 
 function openCategory(categoryId) {
@@ -198,6 +224,12 @@ async function loadForumPosts() {
     try {
         document.getElementById('forum-loading').style.display = 'block';
         document.getElementById('forum-posts').innerHTML = '';
+
+        // Update loading subtitle to match current category
+        const loadingSubtitle = document.getElementById('forum-loading-subtitle');
+        if (loadingSubtitle) {
+            loadingSubtitle.textContent = categoryMappings[currentCategory]?.name || 'Forums';
+        }
 
         const response = await fetch(`/api/content/feed?type=forum&category=${currentCategory}&sort=${currentSort}`);
         if (!response.ok) {
@@ -218,7 +250,33 @@ function displayForumPosts(postsList) {
     const container = document.getElementById('forum-posts');
 
     if (postsList.length === 0) {
-        container.innerHTML = '<p class="loading" style="text-align: center;">No posts found in this category.</p>';
+        container.innerHTML = `
+            <div class="content-item page-forums">
+                <div class="sort-options">
+                    <div class="terminal-subtitle">${categoryMappings[currentCategory]?.name || 'Forums'}</div>
+                    <div>
+                        <button id="create-post-btn-no-content" class="btn-create" onclick="createNewPost()" style="display: none;">
+                            Create Post
+                        </button>
+                        <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                        <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                    </div>
+                </div>
+                <div class="no-content-message">
+                    // NO POSTS FOUND
+                </div>
+            </div>
+        `;
+
+        // Show create buttons if user is logged in
+        if (currentUser) {
+            setTimeout(() => {
+                const createButtons = document.querySelectorAll('[id^="create-post-btn"]');
+                createButtons.forEach(btn => {
+                    if (btn) btn.style.display = 'block';
+                });
+            }, 0);
+        }
         return;
     }
 
@@ -233,16 +291,27 @@ function displayForumPosts(postsList) {
         return 0;
     });
 
-    // Add forum table header
+    // Add sort buttons with terminal subtitle and forum table inside terminal
     let forumHTML = `
-        <div class="forum-table">
-            <div class="forum-table-header">
-                <div class="forum-col-votes"></div>
-                <div class="forum-col-topic">TOPIC</div>
-                <div class="forum-col-author">AUTHOR</div>
-                <div class="forum-col-replies">REPLIES</div>
-                <div class="forum-col-activity">LAST ACTIVITY</div>
+        <div class="content-item page-forums">
+            <div class="sort-options">
+                <div class="terminal-subtitle">${categoryMappings[currentCategory]?.name || 'Forums'}</div>
+                <div>
+                    <button id="create-post-btn-content" class="btn-create" onclick="createNewPost()" style="display: none;">
+                        Create Post
+                    </button>
+                    <button class="sort-btn ${currentSort === 'new' ? 'active' : ''}" data-sort="new" onclick="setSort('new')">New</button>
+                    <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
+                </div>
             </div>
+            <div class="forum-table">
+                <div class="forum-table-header">
+                    <div class="forum-col-votes"></div>
+                    <div class="forum-col-topic">TOPIC</div>
+                    <div class="forum-col-author">AUTHOR</div>
+                    <div class="forum-col-replies">REPLIES</div>
+                    <div class="forum-col-activity">LAST ACTIVITY</div>
+                </div>
     `;
 
     forumHTML += sortedPosts.map(item => {
@@ -291,8 +360,18 @@ function displayForumPosts(postsList) {
         `;
     }).join('');
 
-    forumHTML += '</div>';
+    forumHTML += '</div></div>';
     container.innerHTML = forumHTML;
+
+    // Show create buttons if user is logged in
+    if (currentUser) {
+        setTimeout(() => {
+            const createButtons = document.querySelectorAll('[id^="create-post-btn"]');
+            createButtons.forEach(btn => {
+                if (btn) btn.style.display = 'block';
+            });
+        }, 0);
+    }
 }
 
 // Track user votes locally for undo functionality
@@ -591,7 +670,10 @@ function showForumView(categorySlug) {
 
     // Set forum title
     const categoryName = categoryMappings[currentCategory]?.name || currentCategory;
-    document.getElementById('forum-title').textContent = categoryName;
+    const forumSubtitle = document.getElementById('forum-loading-subtitle');
+    if (forumSubtitle) {
+        forumSubtitle.textContent = categoryName;
+    }
 
     // Show create post button if logged in
     if (currentUser) {

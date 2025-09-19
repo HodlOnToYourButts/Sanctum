@@ -113,7 +113,6 @@ async function loadBlogForEdit() {
         // Populate form with existing data
         document.getElementById('blog-title').value = blog.title || '';
         document.getElementById('blog-body').value = blog.body || '';
-        document.getElementById('allow-comments').checked = blog.allow_comments !== false;
 
         showEditForm();
 
@@ -149,7 +148,6 @@ document.getElementById('blog-form').addEventListener('submit', async (e) => {
 
     const title = document.getElementById('blog-title').value.trim();
     const body = document.getElementById('blog-body').value.trim();
-    const allowComments = document.getElementById('allow-comments').checked;
 
     if (!title || !body) {
         alert('Please fill in both title and content fields.');
@@ -166,7 +164,6 @@ document.getElementById('blog-form').addEventListener('submit', async (e) => {
             type: 'blog',
             title: title,
             body: body,
-            allow_comments: allowComments,
             status: 'published'
         };
 

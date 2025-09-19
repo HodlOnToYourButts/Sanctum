@@ -211,17 +211,17 @@ function updateAdminActions() {
             </button>
         `;
 
-        // Add enable/disable comments button
-        if (currentPost.allow_comments) {
+        // Add enable/disable post button
+        if (currentPost.enabled !== false) {
             actionsHtml += `
-                <button class="admin-btn admin-btn-action" onclick="toggleCommentsEnabled(false)" title="Disable comments">
-                    DISABLE COMMENTS
+                <button class="admin-btn admin-btn-action admin-btn-disable" onclick="togglePostEnabled(false)" title="Disable post">
+                    DISABLE
                 </button>
             `;
         } else {
             actionsHtml += `
-                <button class="admin-btn admin-btn-action" onclick="toggleCommentsEnabled(true)" title="Enable comments">
-                    ENABLE COMMENTS
+                <button class="admin-btn admin-btn-action" onclick="togglePostEnabled(true)" title="Enable post">
+                    ENABLE
                 </button>
             `;
         }
@@ -401,7 +401,7 @@ function editPost() {
     window.location.href = `/blogs/edit/${postId}`;
 }
 
-async function toggleCommentsEnabled(enable) {
+async function togglePostEnabled(enable) {
     try {
         const response = await fetch(`/api/content/${postId}`, {
             method: 'PUT',
@@ -409,20 +409,20 @@ async function toggleCommentsEnabled(enable) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                allow_comments: enable
+                enabled: enable
             })
         });
 
         if (response.ok) {
-            alert(`Comments ${enable ? 'enabled' : 'disabled'} successfully!`);
-            await loadPost(); // Refresh to update comments status
+            alert(`Post ${enable ? 'enabled' : 'disabled'} successfully!`);
+            await loadPost(); // Refresh to update post status
         } else {
             const error = await response.json();
-            alert(`Failed to ${enable ? 'enable' : 'disable'} comments: ${error.error}`);
+            alert(`Failed to ${enable ? 'enable' : 'disable'} post: ${error.error}`);
         }
     } catch (error) {
-        console.error('Error toggling comments:', error);
-        alert('Failed to update comments setting. Please try again.');
+        console.error('Error toggling post:', error);
+        alert('Failed to update post setting. Please try again.');
     }
 }
 

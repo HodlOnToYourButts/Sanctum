@@ -360,12 +360,12 @@ function updateAdminActions() {
             }
         }
 
-        // Enable/Disable replies button (for authors and moderators)
+        // Enable/Disable post button (for authors and moderators)
         if (isAuthor || isModerator) {
-            if (currentPost.allow_comments) {
-                actions += '<button class="admin-btn admin-btn-action" onclick="toggleRepliesEnabled(false)">DISABLE REPLIES</button>';
+            if (currentPost.enabled !== false) {
+                actions += '<button class="admin-btn admin-btn-action admin-btn-disable" onclick="togglePostEnabled(false)">DISABLE</button>';
             } else {
-                actions += '<button class="admin-btn admin-btn-action" onclick="toggleRepliesEnabled(true)">ENABLE REPLIES</button>';
+                actions += '<button class="admin-btn admin-btn-action" onclick="togglePostEnabled(true)">ENABLE</button>';
             }
         }
     } else {
@@ -733,7 +733,7 @@ function showError(message) {
     document.getElementById('error-container').style.display = 'block';
 }
 
-async function toggleRepliesEnabled(enable) {
+async function togglePostEnabled(enable) {
     try {
         const response = await fetch(`/api/content/${postId}`, {
             method: 'PUT',
@@ -741,22 +741,22 @@ async function toggleRepliesEnabled(enable) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                allow_comments: enable
+                enabled: enable
             })
         });
 
         if (response.ok) {
-            alert(`Replies ${enable ? 'enabled' : 'disabled'} successfully!`);
-            currentPost.allow_comments = enable;
+            alert(`Post ${enable ? 'enabled' : 'disabled'} successfully!`);
+            currentPost.enabled = enable;
             updateAdminActions(); // Refresh admin actions
-            updateCommentForm(); // Update comment form visibility
+            displayPost(); // Refresh post display
         } else {
             const error = await response.json();
-            alert(`Failed to ${enable ? 'enable' : 'disable'} replies: ${error.error}`);
+            alert(`Failed to ${enable ? 'enable' : 'disable'} post: ${error.error}`);
         }
     } catch (error) {
-        console.error('Error toggling replies:', error);
-        alert('Failed to update replies setting. Please try again.');
+        console.error('Error toggling post:', error);
+        alert('Failed to update post setting. Please try again.');
     }
 }
 

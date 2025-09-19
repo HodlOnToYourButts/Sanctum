@@ -86,19 +86,31 @@ router.get('/', async (req, res) => {
       // Remove sort for now to avoid index requirement
     });
 
-    const items = result.docs.map(doc => ({
-      _id: doc._id,
-      type: doc.type,
-      title: doc.title,
-      body: doc.body,
-      status: doc.status,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at,
-      author_name: doc.author?.name,
-      author_id: doc.author?.id,
-      tags: doc.tags || [],
-      allow_comments: doc.allow_comments
-    }));
+    const items = result.docs.map(doc => {
+      // Debug logging for author information - log every document
+      logger.info('Processing document for display', {
+        docId: doc._id,
+        docType: doc.type,
+        hasAuthor: !!doc.author,
+        authorName: doc.author?.name,
+        authorNameType: typeof doc.author?.name,
+        authorNameLength: doc.author?.name ? doc.author.name.length : 0,
+        fullAuthor: doc.author
+      });
+
+      return {
+        _id: doc._id,
+        type: doc.type,
+        title: doc.title,
+        body: doc.body,
+        status: doc.status,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at,
+        author_name: doc.author?.name || 'Unknown',
+        author_id: doc.author?.id,
+        tags: doc.tags || []
+      };
+    });
 
     res.json(items);
   } catch (error) {
@@ -262,7 +274,14 @@ router.get('/:id', async (req, res) => {
       content.votes = { up: 0, down: 0, score: 0 };
     }
 
-    res.json(content);
+    // Transform the content to match frontend expectations
+    const transformedContent = {
+      ...content,
+      author_name: content.author?.name || 'Unknown',
+      author_id: content.author?.id
+    };
+
+    res.json(transformedContent);
   } catch (error) {
     if (error.statusCode === 404) {
       res.status(404).json({ error: 'Content not found' });
@@ -282,6 +301,16 @@ router.post('/', requireOidcAuth(), async (req, res) => {
 
     await database.connect(); // Ensure database connection
     const db = database.getDb();
+
+    // Debug logging for author information
+    logger.info('Creating content with user info', {
+      userId: req.user.id,
+      userName: req.user.name,
+      userEmail: req.user.email,
+      userRoles: req.user.roles,
+      fullUser: req.user
+    });
+
     const content = {
       ...value,
       author: {
@@ -621,7 +650,23 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
-    res.json(content);
+    // Transform the content to match frontend expectations
+    const transformedContent = {
+      ...content,
+      author_name: content.author?.name || 'Unknown',
+      author_id: content.author?.id
+    };
+
+    // Debug logging to see what we're returning
+    logger.info('Returning individual content', {
+      contentId: content._id,
+      hasAuthor: !!content.author,
+      authorName: content.author?.name,
+      transformedAuthorName: transformedContent.author_name,
+      fullAuthor: content.author
+    });
+
+    res.json(transformedContent);
   } catch (error) {
     if (error.statusCode === 404) {
       res.status(404).json({ error: 'Content not found' });

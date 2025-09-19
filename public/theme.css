@@ -141,7 +141,9 @@ body::before {
     max-width: 1400px;
     margin: 0 auto;
     padding: 2rem;
+    padding-bottom: 4rem;
     width: 100%;
+    min-height: calc(100vh - 80px); /* Account for header height */
     box-sizing: border-box;
     position: relative;
     z-index: 2;
@@ -163,7 +165,6 @@ body::before {
 .sort-btn {
     padding: 0.75rem 1rem;
     border: 1px solid #333333;
-    border-right: none;
     background: #111111;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -173,9 +174,6 @@ body::before {
     font-size: 0.9rem;
 }
 
-.sort-btn:last-child {
-    border-right: 1px solid #333333;
-}
 
 .sort-btn:hover {
     background: #222222;
@@ -192,12 +190,23 @@ body::before {
     text-shadow: 0 0 3px #00ff41;
 }
 
-.sort-btn.active::before {
-    content: '[';
+.sort-btn.active:not(:first-child) {
+    border-left: 1px solid #00ff41;
 }
 
-.sort-btn.active::after {
+.sort-btn::before {
+    content: '[';
+    opacity: 0;
+}
+
+.sort-btn::after {
     content: ']';
+    opacity: 0;
+}
+
+.sort-btn.active::before,
+.sort-btn.active::after {
+    opacity: 1;
 }
 
 /* Content Feed */
@@ -228,10 +237,10 @@ body::before {
     position: relative;
     font-family: 'Courier New', monospace;
     transition: all 0.2s ease;
+    min-height: calc(100vh - 200px); /* Fill available height minus header and padding */
 }
 
 .content-item::before {
-    content: '[SANCTUM_TERMINAL_v2.1] ';
     position: absolute;
     top: 0;
     left: 0;
@@ -241,22 +250,73 @@ body::before {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
     border-bottom: 1px solid #333333;
+}
+
+.content-item.page-home::before {
+    content: '[TERMINAL] ';
+}
+
+.content-item.page-blogs::before {
+    content: '[TERMINAL] ';
+}
+
+.content-item.page-forums::before {
+    content: '[TERMINAL] ';
+}
+
+/* Sort buttons inside content items */
+.content-item .sort-options {
+    padding: 0.5rem;
+    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
+    border-bottom: 1px solid #333333;
+    display: flex;
+    gap: 0;
+    justify-content: space-between; /* Space between title and buttons */
+    align-items: center;
+    min-height: 3rem; /* Consistent height across all pages */
+}
+
+.sort-options > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+/* Remove border for forums categories page */
+.forums-categories-header {
+    border-bottom: none !important;
+    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
+    padding-bottom: 0.5rem; /* Add bottom padding for better spacing */
+}
+
+.terminal-subtitle {
+    color: #00ff41;
     font-family: 'Courier New', monospace;
+    min-height: 3rem; /* Set minimum height for consistent spacing */
+    display: flex;
+    align-items: center; /* Center text vertically within the min-height */
+    font-size: 1rem;
+    font-weight: bold;
 }
 
-.content-item:hover {
-    border-color: #00ff41;
-    box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
-}
+/* Removed terminal hover glow effect */
 
-.content-item:hover::before {
-    color: #ffffff;
-    text-shadow: 0 0 3px #00ff41;
-}
 
 /* Content inside the terminal window */
 .content-item > * {
     padding: 0 1rem 1rem;
+}
+
+/* Individual content entries within the terminal */
+.content-entry {
+    border-bottom: 1px solid #333333;
+    margin-top: 0.5rem;
+    padding: 0 1rem 1rem; /* Override the general content-item padding */
+}
+
+.content-entry:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .content-header-item {
@@ -264,7 +324,12 @@ body::before {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.5rem;
-    padding-top: 3rem;
+    padding-top: 0.5rem;
+}
+
+/* Blog view pages need extra padding to clear terminal header */
+.content-item.page-blogs > .content-header-item {
+    padding-top: 2rem;
 }
 
 .content-admin-actions {
@@ -330,6 +395,18 @@ body::before {
 }
 
 .admin-btn-demote:hover {
+    background: #ff4444;
+    color: #000000;
+    box-shadow: 0 0 5px #ff4444;
+}
+
+/* Disable button - red styling */
+.admin-btn-disable {
+    color: #ff4444;
+    border-color: #ff4444;
+}
+
+.admin-btn-disable:hover {
     background: #ff4444;
     color: #000000;
     box-shadow: 0 0 5px #ff4444;
@@ -477,13 +554,15 @@ body::before {
     border: 1px solid #333333;
     border-radius: 4px;
     overflow: hidden;
+    padding: 0 !important; /* Override content-item padding */
+    margin: 0; /* Remove any margins */
 }
 
 .forum-table-header {
     display: grid;
     grid-template-columns: 80px 2fr 120px 80px 120px;
     gap: 1rem;
-    background: #222222;
+    background: #1a1a1a;
     border-bottom: 1px solid #333333;
     padding: 0.75rem 1rem;
     font-family: 'Courier New', monospace;
@@ -708,15 +787,17 @@ body::before {
 /* Forum Post Container */
 .forum-post-container {
     background: #111111;
-    border: 1px solid #333333;
-    border-radius: 4px;
-    margin-bottom: 2rem;
-    overflow: hidden;
+    border: none; /* Remove redundant border since it's inside terminal */
+    border-radius: 8px; /* Add rounded corners */
+    margin: 1rem; /* Add margin around the container */
+    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
+    width: calc(100% - 2rem); /* Account for margin */
 }
 
 .forum-post-header {
-    background: #222222;
+    background: #1a1a1a; /* Differentiate from terminal header background */
     border-bottom: 1px solid #333333;
+    border-radius: 8px 8px 0 0; /* Round top corners to match container */
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -748,6 +829,8 @@ body::before {
     grid-template-columns: 200px 1fr;
     gap: 0;
     min-height: 400px;
+    border-radius: 0 0 8px 8px; /* Round bottom corners */
+    overflow: hidden; /* Ensure content respects rounded corners */
 }
 
 /* Author Info Sidebar */
@@ -822,8 +905,8 @@ body::before {
 
 /* Main Post Content */
 .forum-post-main {
-    padding: 1.5rem;
-    background: #111111;
+    padding: 1.5rem 1.5rem 0; /* No bottom padding - let meta bar handle it */
+    background: #0a0a0a; /* Darker background to differentiate from terminal */
     display: flex;
     flex-direction: column;
     min-height: 300px; /* Ensure enough height for bottom positioning */
@@ -834,8 +917,10 @@ body::before {
     justify-content: space-between; /* Edit action on left, date on right */
     align-items: center;
     margin-top: auto; /* Push to bottom of flex container */
-    padding-top: 0.5rem;
+    padding: 0.75rem 0;
+    background: #0a0a0a; /* Match forum post body color */
     border-top: 1px solid #333333;
+    border-radius: 0 0 8px 8px; /* Round bottom corners to match container */
 }
 
 .post-edit-action {
@@ -897,9 +982,9 @@ body::before {
     align-items: center;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: #222222;
-    border: 1px solid #333333;
-    border-radius: 4px;
+    background: #1a1a1a; /* Match forum header color */
+    border-bottom: 1px solid #333333;
+    border-radius: 8px; /* Add rounded corners */
 }
 
 .replies-title {
@@ -919,14 +1004,14 @@ body::before {
 }
 
 .reply-form {
-    background: #111111;
+    background: #0a0a0a; /* Darker background to differentiate from terminal */
     border: 1px solid #333333;
     border-radius: 4px;
     overflow: hidden;
 }
 
 .form-header {
-    background: #222222;
+    background: #1a1a1a; /* Match forum header color */
     border-bottom: 1px solid #333333;
     padding: 0.75rem 1rem;
 }
@@ -939,7 +1024,7 @@ body::before {
 
 .reply-form textarea {
     width: 100%;
-    background: #111111;
+    background: #0a0a0a; /* Darker background to differentiate from terminal */
     border: none;
     color: #cccccc;
     font-family: 'Courier New', monospace;
@@ -1041,7 +1126,7 @@ body::before {
 
 .reply-content {
     padding: 1rem;
-    background: #111111;
+    background: #0a0a0a; /* Darker background to differentiate from terminal */
     display: flex;
     flex-direction: column;
     min-height: 200px; /* Ensure enough height for bottom positioning */
@@ -1555,7 +1640,7 @@ body::before {
 }
 
 .category-card {
-    background: #111111;
+    background: #1a1a1a;
     border: 1px solid #333333;
     padding: 1.5rem;
     transition: all 0.2s ease;
@@ -1666,8 +1751,10 @@ body::before {
 
 .comment {
     border-bottom: 1px solid #333333;
-    padding: 0.75rem 0;
+    padding: 0.75rem;
     font-family: 'Courier New', monospace;
+    background: #0a0a0a; /* Darker background to differentiate from terminal */
+    margin-bottom: 0.5rem;
 }
 
 .comment:last-child {
@@ -1709,16 +1796,36 @@ body::before {
 
 .no-comments,
 .no-comments-blog,
-.no-replies-forum {
+.no-replies-forum,
+.no-content-message {
     color: #888888;
     font-style: normal;
     text-align: center;
-    padding: 1.5rem;
+    padding: 0.75rem 1rem;
     font-family: 'Courier New', monospace;
     background: #111111;
     border: 1px solid #333333;
-    border-radius: 4px;
-    margin-bottom: 1rem;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 300px;
+    font-size: 0.9rem;
+}
+
+/* Center no-content messages vertically in homepage and blogs terminal */
+.page-home .no-content-message,
+.page-blogs .no-content-message,
+.page-forums .no-content-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+}
+
+.no-content-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .no-comments::before {
@@ -1859,6 +1966,7 @@ body::before {
     transition: all 0.2s ease;
     font-family: 'Courier New', monospace;
     margin-right: 1rem;
+    order: -1;
 }
 
 .btn-create::before {
@@ -2019,9 +2127,7 @@ body::before {
 }
 
 /* Hover effects for terminal authenticity */
-.content-item:hover .content-title {
-    text-shadow: 0 0 5px #ffffff;
-}
+/* Removed content title glow effect on terminal hover */
 
 /* Selection styling */
 ::selection {

@@ -31,31 +31,39 @@
     <div class="container">
         <!-- Categories view -->
         <div id="categories-view">
-            <div class="content-header">
-                <div class="forum-header-left">
-                    <h2>Forums</h2>
+            <div id="categories-loading">
+                <div class="content-item page-forums">
+                    <div class="sort-options forums-categories-header">
+                        <div class="terminal-subtitle">Forums</div>
+                        <div></div>
+                    </div>
+                    <div class="no-content-message">
+                        // LOADING...
+                    </div>
                 </div>
-                <div></div>
             </div>
-            <div id="categories-loading" class="loading">Loading categories...</div>
             <div id="categories-grid" class="category-grid"></div>
         </div>
 
         <!-- Forum posts view -->
         <div id="forum-view" style="display: none;">
-            <div class="content-header">
-                <div class="forum-header-left">
-                    <h2 id="forum-title"></h2>
-                </div>
-                <div class="sort-options">
-                    <button id="create-post-btn" class="btn-create" onclick="createNewPost()" style="display: none;">
-                        Create Post
-                    </button>
-                    <button class="sort-btn active" data-sort="new">New</button>
-                    <button class="sort-btn" data-sort="top">Top</button>
+            <div id="forum-loading">
+                <div class="content-item page-forums">
+                    <div class="sort-options">
+                        <div class="terminal-subtitle" id="forum-loading-subtitle">Forums</div>
+                        <div>
+                            <button id="create-post-btn" class="btn-create" onclick="createNewPost()" style="display: none;">
+                                Create Post
+                            </button>
+                            <button class="sort-btn active" data-sort="new" onclick="setSort('new')">New</button>
+                            <button class="sort-btn" data-sort="top" onclick="setSort('top')">Top</button>
+                        </div>
+                    </div>
+                    <div class="no-content-message">
+                        // LOADING...
+                    </div>
                 </div>
             </div>
-            <div id="forum-loading" class="loading">Loading posts...</div>
             <div id="forum-posts" class="content-feed"></div>
         </div>
     </div>
