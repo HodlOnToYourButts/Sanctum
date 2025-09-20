@@ -996,10 +996,13 @@ body::before {
     background: #111111;
     border: none; /* Remove redundant border since it's inside terminal */
     border-radius: 8px; /* Add rounded corners */
-    margin: 0.5rem; /* Reduced margin for better filling */
-    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
-    width: calc(100% - 1rem); /* Account for smaller margin */
-    min-height: calc(100vh - 13rem); /* Fill available height without causing scroll */
+    margin-top: 1.5rem; /* Increased top margin */
+    margin-bottom: 0.5rem; /* Keep bottom margin */
+    margin-left: 0; /* Remove left margin */
+    margin-right: 0; /* Remove right margin */
+    padding: 8px; /* 8px padding on all sides */
+    width: 100%; /* Full width without side margins */
+    min-height: calc(100vh - 13rem); /* Stretch to bottom of page */
     display: flex;
     flex-direction: column;
 }
@@ -1031,10 +1034,13 @@ body::before {
     background: #111111;
     border: none; /* Remove redundant border since it's inside terminal */
     border-radius: 8px; /* Add rounded corners */
-    margin: 0.5rem; /* Reduced margin for better filling */
-    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
-    width: calc(100% - 1rem); /* Account for smaller margin */
-    min-height: calc(100vh - 13rem); /* Fill available height without causing scroll */
+    margin-top: 1.5rem; /* Increased top margin */
+    margin-bottom: 0.5rem; /* Keep bottom margin */
+    margin-left: 0; /* Remove left margin */
+    margin-right: 0; /* Remove right margin */
+    padding: 8px; /* 8px padding on all sides */
+    width: 100%; /* Full width without side margins */
+    min-height: calc(100vh - 13rem); /* Stretch to bottom of page */
     display: flex;
     flex-direction: column;
 }
@@ -1066,9 +1072,13 @@ body::before {
     background: #111111;
     border: none; /* Remove redundant border since it's inside terminal */
     border-radius: 8px; /* Add rounded corners */
-    margin: 0.5rem; /* Reduced margin for better filling */
-    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
-    min-height: 0; /* Prevent overflow issues */
+    margin-top: 1.5rem; /* Increased top margin */
+    margin-bottom: 0.5rem; /* Keep bottom margin */
+    margin-left: 0; /* Remove left margin */
+    margin-right: 0; /* Remove right margin */
+    padding: 8px; /* 8px padding on all sides */
+    width: 100%; /* Full width without side margins */
+    min-height: calc(100vh - 13rem); /* Stretch to bottom of page */
     display: flex;
     flex-direction: column;
 }
