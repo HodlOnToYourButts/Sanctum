@@ -1,5 +1,5 @@
 // Global state
-let currentUser = null;
+// currentUser is now defined in auth-utils.js
 let currentPost = null;
 let postId = null;
 

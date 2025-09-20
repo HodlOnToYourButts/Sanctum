@@ -1,5 +1,5 @@
 // Global state
-let currentUser = null;
+// currentUser is now defined in auth-utils.js
 let currentPost = null;
 let postId = null;
 
@@ -9,83 +9,26 @@ function getPostId() {
     return pathParts[pathParts.length - 1];
 }
 
-async function checkAuth() {
-    try {
-        const response = await fetch('/user');
-        if (response.ok) {
-            const user = await response.json();
-            showLoggedInState(user);
-        } else if (response.status === 401) {
-            showLoggedOutState();
-        } else {
-            console.warn('Auth check returned unexpected status:', response.status);
-            showLoggedOutState();
-        }
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        showLoggedOutState();
-    }
-}
-
-function showLoggedInState(user) {
-    currentUser = user;
-    document.getElementById('user-name-header').textContent = user.name || 'User';
-    document.getElementById('user-info').classList.add('show');
-
-    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
-
-    document.getElementById('auth-section').innerHTML = authButtons;
-
+// Custom functions for blog post page
+function updateBlogPostAuth(user) {
     // Update comment form if user is logged in
     updateCommentForm();
     updateAdminActions();
 }
 
-function showLoggedOutState() {
-    currentUser = null;
-    document.getElementById('user-info').classList.remove('show');
-    document.getElementById('auth-section').innerHTML =
-        '<button class="auth-button" onclick="goToLogin()">Login</button>';
+// Override the shared auth functions to include blog-post-specific logic
+const originalShowLoggedInState = showLoggedInState;
+const originalShowLoggedOutState = showLoggedOutState;
 
-    updateCommentForm();
-    updateAdminActions();
-}
+showLoggedInState = function(user) {
+    originalShowLoggedInState(user);
+    updateBlogPostAuth(user);
+};
 
-function goToLogin() {
-    const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `/login?return=${returnUrl}`;
-}
-
-async function logout() {
-    try {
-        const response = await fetch('/logout', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                showLoggedOutState();
-                if (result.logoutUrl) {
-                    window.location.href = result.logoutUrl;
-                }
-            } else {
-                console.error('Logout failed:', result.error);
-            }
-        } else {
-            console.error('Logout failed');
-        }
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-}
+showLoggedOutState = function() {
+    originalShowLoggedOutState();
+    updateBlogPostAuth(null);
+};
 
 async function loadPost() {
     try {

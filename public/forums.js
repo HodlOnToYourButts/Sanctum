@@ -1,5 +1,5 @@
 // Global state
-let currentUser = null;
+// currentUser is now defined in auth-utils.js
 let currentCategory = null;
 let currentSort = 'new';
 
@@ -18,38 +18,8 @@ const slugToCategory = {
     'feedback': 'feedback'
 };
 
-async function checkAuth() {
-    try {
-        const response = await fetch('/user');
-        if (response.ok) {
-            const user = await response.json();
-            showLoggedInState(user);
-        } else if (response.status === 401) {
-            // Expected when not logged in - don't log as error
-            showLoggedOutState();
-        } else {
-            console.warn('Auth check returned unexpected status:', response.status);
-            showLoggedOutState();
-        }
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        showLoggedOutState();
-    }
-}
-
-function showLoggedInState(user) {
-    currentUser = user;
-    document.getElementById('user-name-header').textContent = user.name || 'User';
-    document.getElementById('user-info').classList.add('show');
-
-    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
-
-    document.getElementById('auth-section').innerHTML = authButtons;
-
+// Custom showLoggedInState for forums page with create post button logic
+function showForumsLoggedInState(user) {
     // Show create post buttons when logged in and in forum view
     if (currentCategory) {
         const createButtons = document.querySelectorAll('[id^="create-post-btn"]');
@@ -59,44 +29,19 @@ function showLoggedInState(user) {
     }
 }
 
-function showLoggedOutState() {
-    document.getElementById('user-info').classList.remove('show');
-    document.getElementById('auth-section').innerHTML =
-        '<button class="auth-button" onclick="goToLogin()">Login</button>';
-}
+// Override the shared auth functions to include forums-specific logic
+const originalShowLoggedInState = showLoggedInState;
+const originalShowLoggedOutState = showLoggedOutState;
 
-function goToLogin() {
-    const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `/login?return=${returnUrl}`;
-}
+showLoggedInState = function(user) {
+    originalShowLoggedInState(user);
+    showForumsLoggedInState(user);
+};
 
-async function logout() {
-    try {
-        const response = await fetch('/logout', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                showLoggedOutState();
-                // Optionally redirect to OIDC logout URL for complete logout
-                if (result.logoutUrl) {
-                    window.location.href = result.logoutUrl;
-                }
-            } else {
-                console.error('Logout failed:', result.error);
-            }
-        } else {
-            console.error('Logout failed');
-        }
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-}
+showLoggedOutState = function() {
+    originalShowLoggedOutState();
+    // No specific forums logout logic needed
+};
 
 async function loadCategories() {
     try {

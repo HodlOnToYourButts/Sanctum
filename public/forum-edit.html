@@ -98,6 +98,15 @@
                     <a href="/blogs" class="nav-item">Blogs</a>
                     <a href="/forums" class="nav-item active">Forums</a>
                 </nav>
+                <div class="hamburger-menu" onclick="toggleMobileNav()">
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                </div>
+            </div>
+            <div class="mobile-nav" id="mobile-nav">
+                <a href="/blogs" class="nav-item">Blogs</a>
+                <a href="/forums" class="nav-item">Forums</a>
             </div>
             <div class="user-auth-section">
                 <div id="user-info" class="user-info-header">
@@ -152,7 +161,8 @@
         </div>
     </div>
 
-    <script src="/forum-edit.js"></script>
+    <script src="/js/common-utils.js"></script>
     <script src="/js/auth-utils.js"></script>
+    <script src="/forum-edit.js"></script>
 </body>
 </html>

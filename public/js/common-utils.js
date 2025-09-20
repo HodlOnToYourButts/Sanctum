@@ -55,3 +55,13 @@ function handleApiError(error, context = '') {
     const message = context ? `Failed to ${context}. Please try again.` : 'An error occurred. Please try again.';
     alert(message);
 }
+
+// Toggle mobile navigation menu
+function toggleMobileNav() {
+    const mobileNav = document.getElementById('mobile-nav');
+    if (mobileNav) {
+        mobileNav.classList.toggle('show');
+        // Add/remove class to body to handle content shifting
+        document.body.classList.toggle('mobile-nav-open', mobileNav.classList.contains('show'));
+    }
+}

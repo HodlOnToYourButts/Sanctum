@@ -1,39 +1,9 @@
 // Global state
 let currentSort = 'new';
-let currentUser = null;
+// currentUser is now defined in auth-utils.js
 
-async function checkAuth() {
-    try {
-        const response = await fetch('/user');
-        if (response.ok) {
-            const user = await response.json();
-            showLoggedInState(user);
-        } else if (response.status === 401) {
-            // Expected when not logged in - don't log as error
-            showLoggedOutState();
-        } else {
-            console.warn('Auth check returned unexpected status:', response.status);
-            showLoggedOutState();
-        }
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        showLoggedOutState();
-    }
-}
-
-function showLoggedInState(user) {
-    currentUser = user;
-    document.getElementById('user-name-header').textContent = user.name || 'User';
-    document.getElementById('user-info').classList.add('show');
-
-    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
-
-    document.getElementById('auth-section').innerHTML = authButtons;
-
+// Custom showLoggedInState for blogs page with create button logic
+function showBlogsLoggedInState(user) {
     // Show create blog buttons when logged in
     const createButtons = document.querySelectorAll('[id^="create-blog-btn"]');
     createButtons.forEach(btn => {
@@ -41,11 +11,8 @@ function showLoggedInState(user) {
     });
 }
 
-function showLoggedOutState() {
-    document.getElementById('user-info').classList.remove('show');
-    document.getElementById('auth-section').innerHTML =
-        '<button class="auth-button" onclick="goToLogin()">Login</button>';
-
+// Custom showLoggedOutState for blogs page with create button logic
+function showBlogsLoggedOutState() {
     // Hide create blog buttons when logged out
     const createButtons = document.querySelectorAll('[id^="create-blog-btn"]');
     createButtons.forEach(btn => {
@@ -53,38 +20,19 @@ function showLoggedOutState() {
     });
 }
 
-function goToLogin() {
-    const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `/login?return=${returnUrl}`;
-}
+// Override the shared auth functions to include blogs-specific logic
+const originalShowLoggedInState = showLoggedInState;
+const originalShowLoggedOutState = showLoggedOutState;
 
-async function logout() {
-    try {
-        const response = await fetch('/logout', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
+showLoggedInState = function(user) {
+    originalShowLoggedInState(user);
+    showBlogsLoggedInState(user);
+};
 
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                showLoggedOutState();
-                // Optionally redirect to OIDC logout URL for complete logout
-                if (result.logoutUrl) {
-                    window.location.href = result.logoutUrl;
-                }
-            } else {
-                console.error('Logout failed:', result.error);
-            }
-        } else {
-            console.error('Logout failed');
-        }
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-}
+showLoggedOutState = function() {
+    originalShowLoggedOutState();
+    showBlogsLoggedOutState();
+};
 
 async function loadContentFeed() {
     try {

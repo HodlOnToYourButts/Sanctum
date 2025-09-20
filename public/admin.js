@@ -1,5 +1,5 @@
 // Admin page functionality
-let currentUser = null;
+// currentUser is now defined in auth-utils.js
 
 async function checkAdminAuth() {
     try {
