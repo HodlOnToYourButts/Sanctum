@@ -326,14 +326,14 @@ function viewFullPost(postId) {
     // For now, determine content type by checking against current loaded content
     // In a more robust implementation, this could be passed as a parameter
     const contentFeed = document.getElementById('content-feed');
-    const contentItems = contentFeed.querySelectorAll('.content-item');
+    const contentEntries = contentFeed.querySelectorAll('.content-entry');
 
-    for (let item of contentItems) {
+    for (let item of contentEntries) {
         if (item.innerHTML.includes(postId)) {
-            if (item.classList.contains('content-item-forum')) {
+            if (item.classList.contains('content-entry-forum')) {
                 window.location.href = `/forums/view/${postId}`;
                 return;
-            } else if (item.classList.contains('content-item-blog')) {
+            } else if (item.classList.contains('content-entry-blog')) {
                 window.location.href = `/blogs/view/${postId}`;
                 return;
             }

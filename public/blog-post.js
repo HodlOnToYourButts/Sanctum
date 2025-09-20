@@ -55,7 +55,7 @@ async function loadPost() {
         document.getElementById('content-meta').innerHTML = `
             By ${escapeHtml(currentPost.author_name || 'Unknown')} •
             ${new Date(currentPost.created_at).toLocaleDateString()}
-            ${currentPost.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
+            ${currentPost.featured ? '<span class="featured-badge">★</span>' : ''}
         `;
         document.getElementById('content-body').textContent = currentPost.body;
 
@@ -170,7 +170,24 @@ function updateAdminActions() {
         }
     }
 
-    adminActions.innerHTML = actionsHtml;
+    // Create structure with both desktop buttons and mobile hamburger menu
+    if (actionsHtml) {
+        adminActions.innerHTML = `
+            <div class="desktop-admin-actions">
+                ${actionsHtml}
+            </div>
+            <div class="admin-hamburger-menu" onclick="toggleMobileAdminActions(event)">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </div>
+            <div class="mobile-admin-actions" id="mobile-admin-actions">
+                ${actionsHtml}
+            </div>
+        `;
+    } else {
+        adminActions.innerHTML = '';
+    }
 }
 
 function getUserVote(contentId) {

@@ -74,10 +74,6 @@ function showLoggedInState(user) {
 
     let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
 
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
-
     document.getElementById('auth-section').innerHTML = authButtons;
 }
 

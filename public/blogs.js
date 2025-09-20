@@ -123,7 +123,7 @@ function displayContentFeed(contentList) {
                             </div>
                         </div>
                     </div>
-                    ${item.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
+                    ${item.featured ? '<span class="featured-badge">★</span>' : ''}
                 </div>
                 <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
             </div>

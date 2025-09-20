@@ -65,3 +65,21 @@ function toggleMobileNav() {
         document.body.classList.toggle('mobile-nav-open', mobileNav.classList.contains('show'));
     }
 }
+
+// Toggle mobile admin actions menu
+function toggleMobileAdminActions(event) {
+    // Find the mobile admin actions element that's a sibling of the clicked hamburger menu
+    const hamburgerMenu = event ? event.target.closest('.admin-hamburger-menu') : null;
+    if (hamburgerMenu) {
+        const mobileAdminActions = hamburgerMenu.nextElementSibling;
+        if (mobileAdminActions && mobileAdminActions.classList.contains('mobile-admin-actions')) {
+            mobileAdminActions.classList.toggle('show');
+        }
+    } else {
+        // Fallback to the original behavior for backward compatibility
+        const mobileAdminActions = document.getElementById('mobile-admin-actions');
+        if (mobileAdminActions) {
+            mobileAdminActions.classList.toggle('show');
+        }
+    }
+}

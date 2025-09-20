@@ -50,10 +50,6 @@ function showLoggedInState(user) {
 
     let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
 
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
-
     document.getElementById('auth-section').innerHTML = authButtons;
 
     // Clear any login prompts that might be showing
@@ -121,7 +117,7 @@ async function loadPost() {
         currentPost = await response.json();
         displayPost();
 
-        loadComments();
+        loadReplies();
 
         document.getElementById('loading-container').style.display = 'none';
         document.getElementById('post-container').style.display = 'block';
@@ -342,21 +338,7 @@ function updateAdminActions() {
 
         console.log('isAuthor:', isAuthor, 'isModerator:', isModerator);
 
-        if (isModerator) {
-            // Pin/Unpin button
-            if (currentPost.pinned) {
-                actions += '<button class="admin-btn admin-btn-action admin-btn-unpin" onclick="unpinPost()">UNPIN</button>';
-            } else {
-                actions += '<button class="admin-btn admin-btn-action" onclick="pinPost()">PIN</button>';
-            }
-
-            // Promote/Demote button
-            if (currentPost.featured) {
-                actions += '<button class="admin-btn admin-btn-action admin-btn-demote" onclick="demotePost()">DEMOTE</button>';
-            } else {
-                actions += '<button class="admin-btn admin-btn-action" onclick="promotePost()">PROMOTE</button>';
-            }
-        }
+        // PIN/UNPIN and PROMOTE/DEMOTE buttons moved to main admin action bar
 
         // Enable/Disable button moved to edit action area
     } else {
@@ -380,10 +362,10 @@ function updateAdminActions() {
 }
 
 function updateEditAction() {
-    const editContainer = document.getElementById('post-edit-action');
+    const editContainer = document.getElementById('admin-actions');
 
     if (!editContainer) {
-        console.warn('post-edit-action element not found');
+        console.warn('admin-actions element not found');
         return;
     }
 
@@ -394,20 +376,83 @@ function updateEditAction() {
         const isModerator = currentUser.roles && (currentUser.roles.includes('admin') || currentUser.roles.includes('moderator'));
 
         if (isAuthor || isModerator) {
-            editAction = '<button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editPost()">Edit</button>';
+            let actionsHtml = '';
+
+            // Build action buttons
+            actionsHtml += '<button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editPost()">Edit</button>';
 
             // Add Disable/Enable button next to Edit
             // Authors can only disable, admins/moderators can enable/disable
             if (currentPost.enabled !== false) {
-                editAction += '<button class="admin-btn-action-inline admin-btn-disable" onclick="togglePostEnabled(false)">Disable</button>';
+                actionsHtml += '<button class="admin-btn admin-btn-action admin-btn-disable" onclick="togglePostEnabled(false)">DISABLE</button>';
             } else if (isModerator) {
                 // Only moderators can enable disabled posts
-                editAction += '<button class="admin-btn-action-inline" onclick="togglePostEnabled(true)">Enable</button>';
+                actionsHtml += '<button class="admin-btn admin-btn-action" onclick="togglePostEnabled(true)">ENABLE</button>';
             }
+
+            // Add moderator-only buttons (PROMOTE/DEMOTE and PIN/UNPIN)
+            if (isModerator) {
+                // Promote/Demote button
+                if (currentPost.featured) {
+                    actionsHtml += '<button class="admin-btn admin-btn-action admin-btn-demote" onclick="demotePost()">DEMOTE</button>';
+                } else {
+                    actionsHtml += '<button class="admin-btn admin-btn-action" onclick="promotePost()">PROMOTE</button>';
+                }
+
+                // Pin/Unpin button
+                if (currentPost.pinned) {
+                    actionsHtml += '<button class="admin-btn admin-btn-action admin-btn-unpin" onclick="unpinPost()">UNPIN</button>';
+                } else {
+                    actionsHtml += '<button class="admin-btn admin-btn-action" onclick="pinPost()">PIN</button>';
+                }
+            }
+
+            // Create structure with both desktop buttons and mobile hamburger menu
+            editAction = `
+                <div class="desktop-admin-actions">
+                    ${actionsHtml}
+                </div>
+                <div class="admin-hamburger-menu" onclick="toggleMobileAdminActions(event)">
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                </div>
+                <div class="mobile-admin-actions" id="mobile-admin-actions">
+                    ${actionsHtml}
+                </div>
+            `;
         }
     }
 
     editContainer.innerHTML = editAction;
+}
+
+function generateReplyAdminActions(replyId, enabled, isModerator) {
+    let actionsHtml = '';
+
+    // Edit button
+    actionsHtml += `<button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editReply('${replyId}')">Edit</button>`;
+
+    // Enable/Disable button
+    if (enabled !== false) {
+        actionsHtml += `<button class="admin-btn admin-btn-action admin-btn-disable" onclick="toggleReplyEnabled('${replyId}', false)">DISABLE</button>`;
+    } else if (isModerator) {
+        actionsHtml += `<button class="admin-btn admin-btn-action" onclick="toggleReplyEnabled('${replyId}', true)">ENABLE</button>`;
+    }
+
+    return `
+        <div class="desktop-admin-actions">
+            ${actionsHtml}
+        </div>
+        <div class="admin-hamburger-menu" onclick="toggleMobileAdminActions(event)">
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+        </div>
+        <div class="mobile-admin-actions" id="mobile-admin-actions">
+            ${actionsHtml}
+        </div>
+    `;
 }
 
 async function pinPost() {
@@ -499,16 +544,102 @@ function editPost() {
 }
 
 function editReply(replyId) {
-    // For now, redirect to a reply edit page
-    // This would need to be implemented as a separate edit interface for replies
-    window.location.href = `/forums/reply/edit/${replyId}`;
+    const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+    if (!replyElement) return;
+
+    const replyBody = replyElement.querySelector('.reply-body');
+    const replyMetaBar = replyElement.querySelector('.reply-meta-bar');
+    const originalContent = replyBody.textContent.trim();
+
+    // Hide the meta bar (admin actions and date)
+    if (replyMetaBar) {
+        replyMetaBar.style.display = 'none';
+    }
+
+    // Replace reply body with textarea
+    replyBody.innerHTML = `
+        <div class="reply-edit-form">
+            <textarea class="reply-edit-textarea" rows="4">${escapeHtml(originalContent)}</textarea>
+            <div class="reply-edit-actions">
+                <button class="btn-save" onclick="saveReplyEdit('${replyId}')">Save</button>
+                <button class="btn-cancel" onclick="cancelReplyEdit('${replyId}', \`${escapeHtml(originalContent)}\`)">Cancel</button>
+            </div>
+        </div>
+    `;
+
+    // Focus the textarea
+    const textarea = replyBody.querySelector('.reply-edit-textarea');
+    textarea.focus();
+}
+
+function saveReplyEdit(replyId) {
+    const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+    const textarea = replyElement.querySelector('.reply-edit-textarea');
+    const newContent = textarea.value.trim();
+
+    if (!newContent) {
+        alert('Reply content cannot be empty');
+        return;
+    }
+
+    // Call API to update reply
+    updateReplyContent(replyId, newContent);
+}
+
+function cancelReplyEdit(replyId, originalContent) {
+    const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+    const replyBody = replyElement.querySelector('.reply-body');
+    const replyMetaBar = replyElement.querySelector('.reply-meta-bar');
+
+    // Restore original content
+    replyBody.innerHTML = formatPostContent(originalContent);
+
+    // Show the meta bar again
+    if (replyMetaBar) {
+        replyMetaBar.style.display = '';
+    }
+}
+
+async function updateReplyContent(replyId, newContent) {
+    try {
+        // First get the original reply data to preserve author information
+        const repliesResponse = await fetch(`/api/content/${postId}/replies`);
+        const replies = await repliesResponse.json();
+        const originalReply = replies.find(r => r._id === replyId);
+
+        if (!originalReply) {
+            throw new Error('Reply not found');
+        }
+
+        const response = await fetch(`/api/content/replies/${replyId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: newContent,
+                author_name: originalReply.author_name
+            })
+        });
+
+        if (response.ok) {
+            // Reload replies to show updated content
+            await loadReplies();
+        } else {
+            const error = await response.json();
+            alert(`Failed to update reply: ${error.error}`);
+        }
+    } catch (error) {
+        console.error('Error updating reply:', error);
+        alert('Failed to update reply. Please try again.');
+    }
 }
 
 function backToForums() {
     window.location.href = '/forums';
 }
 
-async function loadComments() {
+async function loadReplies() {
     try {
         const response = await fetch(`/api/content/${postId}/replies`);
         if (!response.ok) {
@@ -516,7 +647,7 @@ async function loadComments() {
         }
 
         const replies = await response.json();
-        displayComments(replies);
+        displayReplies(replies);
     } catch (error) {
         console.error('Error loading replies:', error);
         document.getElementById('comments-list').innerHTML =
@@ -524,42 +655,42 @@ async function loadComments() {
     }
 }
 
-function displayComments(comments) {
+function displayReplies(replies) {
     const commentsList = document.getElementById('comments-list');
 
-    if (comments.length === 0) {
+    if (replies.length === 0) {
         commentsList.innerHTML = '<p class="no-replies-forum"></p>';
         return;
     }
 
-    commentsList.innerHTML = comments.map((comment, index) => {
-        const commentDate = new Date(comment.created_at);
+    commentsList.innerHTML = replies.map((reply, index) => {
+        const replyDate = new Date(reply.created_at);
 
-        // Determine comment author role
-        const commentAuthorRoles = comment.author_roles || [];
-        let commentRoleDisplay = 'Member';
-        if (commentAuthorRoles.includes('admin')) {
-            commentRoleDisplay = 'Administrator';
-        } else if (commentAuthorRoles.includes('moderator')) {
-            commentRoleDisplay = 'Moderator';
-        } else if (commentAuthorRoles.includes('contributor')) {
-            commentRoleDisplay = 'Contributor';
+        // Determine reply author role
+        const replyAuthorRoles = reply.author_roles || [];
+        let replyRoleDisplay = 'Member';
+        if (replyAuthorRoles.includes('admin')) {
+            replyRoleDisplay = 'Administrator';
+        } else if (replyAuthorRoles.includes('moderator')) {
+            replyRoleDisplay = 'Moderator';
+        } else if (replyAuthorRoles.includes('contributor')) {
+            replyRoleDisplay = 'Contributor';
         }
 
         // Check if current user can edit this reply
-        const isReplyAuthor = currentUser && (currentUser.name === comment.author_name || currentUser.email === comment.author_email);
+        const isReplyAuthor = currentUser && (currentUser.name === reply.author_name || currentUser.email === reply.author_email);
         const isModerator = currentUser && currentUser.roles && (currentUser.roles.includes('admin') || currentUser.roles.includes('moderator'));
         const canEditReply = isReplyAuthor || isModerator;
 
         return `
-            <div class="forum-reply">
+            <div class="forum-reply" data-reply-id="${reply._id}">
                 <div class="reply-author-info">
                     <div class="reply-avatar">
                         <span class="avatar-placeholder">👤</span>
                     </div>
                     <div class="reply-author-details">
-                        <div class="reply-author-name">${escapeHtml(comment.author_name)}</div>
-                        <div class="reply-author-role">${commentRoleDisplay}</div>
+                        <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
+                        <div class="reply-author-role">${replyRoleDisplay}</div>
                         <div class="reply-author-stats">
                             <div class="author-stat">
                                 <span class="stat-label">Posts:</span>
@@ -574,17 +705,14 @@ function displayComments(comments) {
                 </div>
                 <div class="reply-content">
                     <div class="reply-body">
-                        ${formatPostContent(comment.content)}
+                        ${formatPostContent(reply.content)}
                     </div>
                     <div class="reply-meta-bar">
                         <div class="reply-edit-action">
-                            ${canEditReply ? '<button class="admin-btn admin-btn-nav admin-btn-edit" onclick="editReply(\'' + comment._id + '\')">Edit</button>' : ''}
-                            ${canEditReply ? (comment.enabled !== false ?
-                                '<button class="admin-btn-action-inline admin-btn-disable" onclick="toggleReplyEnabled(\'' + comment._id + '\', false)">Disable</button>' :
-                                (isModerator ? '<button class="admin-btn-action-inline" onclick="toggleReplyEnabled(\'' + comment._id + '\', true)">Enable</button>' : '')) : ''}
+                            ${canEditReply ? generateReplyAdminActions(reply._id, reply.enabled, isModerator) : ''}
                         </div>
                         <div class="reply-date-info">
-                            <span class="reply-date">${commentDate.toLocaleString()}</span>
+                            <span class="reply-date">${replyDate.toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
@@ -593,8 +721,8 @@ function displayComments(comments) {
     }).join('');
 
     // Load stats for each reply author
-    comments.forEach((comment, index) => {
-        loadReplyAuthorStats(comment.author_name, index);
+    replies.forEach((reply, index) => {
+        loadReplyAuthorStats(reply.author_name, index);
     });
 }
 
@@ -641,7 +769,7 @@ async function submitComment() {
         }
 
         textarea.value = '';
-        await loadComments();
+        await loadReplies();
         // Reload the post to update reply count
         await loadPost();
     } catch (error) {
@@ -794,7 +922,7 @@ async function toggleReplyEnabled(replyId, enable) {
 
         if (response.ok) {
             alert(`Reply ${enable ? 'enabled' : 'disabled'} successfully!`);
-            await loadComments(); // Refresh replies
+            await loadReplies(); // Refresh replies
         } else {
             const error = await response.json();
             alert(`Failed to ${enable ? 'enable' : 'disable'} reply: ${error.error}`);
