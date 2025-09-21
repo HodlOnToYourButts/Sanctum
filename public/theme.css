@@ -140,8 +140,7 @@ body::before {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
-    padding-bottom: 1rem; /* Reduced bottom padding to prevent scroll */
+    padding: 8px;
     width: 100%;
     /* Removed min-height to prevent overflow */
     box-sizing: border-box;
@@ -237,7 +236,7 @@ body::before {
     position: relative;
     font-family: 'Courier New', monospace;
     transition: all 0.2s ease;
-    min-height: calc(100vh - 200px); /* Fill available height minus header and padding */
+    min-height: calc(100vh - 8rem); /* Fill available height minus header and padding */
 }
 
 /* Remove bottom margin for blog post pages to prevent scroll */
@@ -271,7 +270,7 @@ body::before {
 
 /* Ensure forums content fills terminal window */
 .content-item.page-forums {
-    min-height: calc(100vh - 12rem); /* Fill available viewport height */
+    min-height: calc(100vh - 8rem); /* Fill available viewport height */
     display: flex;
     flex-direction: column;
 }
@@ -280,7 +279,6 @@ body::before {
 .content-item .sort-options {
     padding: 0.5rem;
     padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
-    border-bottom: 1px solid #333333;
     display: flex;
     gap: 0;
     justify-content: space-between; /* Space between title and buttons */
@@ -321,13 +319,11 @@ body::before {
 
 /* Individual content entries within the terminal */
 .content-entry {
-    border-bottom: 1px solid #333333;
     margin-top: 0.5rem;
     padding: 0 1rem 1rem; /* Override the general content-item padding */
 }
 
 .content-entry:last-child {
-    border-bottom: none;
     margin-bottom: 0;
 }
 
@@ -380,9 +376,15 @@ body::before {
 .blog-post-container .comments-section {
     background: #0a0a0a; /* Match body color */
     border-radius: 0 0 8px 8px; /* Round bottom corners */
-    padding: 1.5rem;
+    padding: 0;
     margin: 0; /* Remove margin since container handles spacing */
 }
+
+/* Comments list border */
+#comments-list {
+    border-top: 1px solid #333333;
+}
+
 
 /* Make blog content body flexible */
 .blog-post-container .content-body {
@@ -411,6 +413,17 @@ body::before {
     border: 1px solid #666666;
     background: #111111;
     transition: all 0.2s ease;
+}
+
+/* Ensure admin hamburger menu is hidden on desktop */
+@media (min-width: 481px) {
+    .admin-hamburger-menu {
+        display: none !important;
+    }
+
+    .desktop-admin-actions {
+        display: flex !important;
+    }
 }
 
 .admin-hamburger-menu:hover {
@@ -735,7 +748,7 @@ body::before {
 /* Forum Table Layout */
 .forum-table {
     background: #111111;
-    border: 1px solid #333333;
+    border-top: 1px solid #333333;
     border-radius: 4px;
     overflow: hidden;
     padding: 0 !important; /* Override content-item padding */
@@ -747,7 +760,6 @@ body::before {
     grid-template-columns: 80px 2fr 120px 80px 120px;
     gap: 1rem;
     background: #1a1a1a;
-    border-bottom: 1px solid #333333;
     padding: 0.75rem 1rem;
     font-family: 'Courier New', monospace;
     font-weight: bold;
@@ -760,6 +772,7 @@ body::before {
     grid-template-columns: 80px 2fr 120px 80px 120px;
     gap: 1rem;
     padding: 1rem;
+    border-top: 1px solid #333333;
     border-bottom: 1px solid #333333;
     transition: background-color 0.2s ease;
     align-items: center; /* Center content vertically */
@@ -776,15 +789,21 @@ body::before {
 .forum-row-pinned {
     background: #1a2a1a;
     border-left: 3px solid #00ff41;
+    border-bottom: none;
 }
 
 .forum-row-pinned:hover {
     background: #1f2f1f;
 }
 
-/* Add left margin to non-pinned rows to align with pinned rows */
+/* Add left border to non-pinned rows to align with pinned rows */
 .forum-row:not(.forum-row-pinned) {
-    margin-left: 3px;
+    border-left: 3px solid transparent;
+    transition: background-color 0.2s ease, border-left-color 0.2s ease;
+}
+
+.forum-row:not(.forum-row-pinned):hover {
+    border-left-color: #1a1a1a;
 }
 
 /* Column Styles */
@@ -973,9 +992,12 @@ body::before {
     background: #111111;
     border: none; /* Remove redundant border since it's inside terminal */
     border-radius: 8px; /* Add rounded corners */
-    margin: 1rem; /* Add margin around the container */
-    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
-    width: calc(100% - 2rem); /* Account for margin */
+    margin-top: 1.5rem; /* Increased top margin to prevent overlap with terminal header */
+    margin-bottom: 1rem; /* Keep bottom margin */
+    margin-left: 0; /* Remove left margin */
+    margin-right: 0; /* Remove right margin */
+    padding: 8px; /* Add 8px padding on all sides */
+    width: 100%; /* Full width without side margins */
 }
 
 /* Blog Post Container */
@@ -983,10 +1005,9 @@ body::before {
     background: #111111;
     border: none; /* Remove redundant border since it's inside terminal */
     border-radius: 8px; /* Keep rounded corners */
-    margin: 0.5rem; /* Reduced margin for better filling */
-    padding-top: 2rem; /* Add top padding to prevent overlap with terminal header */
-    width: calc(100% - 1rem); /* Account for smaller margin */
-    min-height: calc(100vh - 13rem); /* Fill available height without causing scroll */
+    margin: 1.5rem 0 0 0; /* Match forum-post-container margin */
+    padding: 8px; /* Set padding to 8px */
+    width: 100%; /* Full width since no left/right margin */
     display: flex;
     flex-direction: column;
 }
@@ -1002,7 +1023,6 @@ body::before {
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
     width: 100%; /* Full width without side margins */
-    min-height: calc(100vh - 13rem); /* Stretch to bottom of page */
     display: flex;
     flex-direction: column;
 }
@@ -1010,7 +1030,6 @@ body::before {
 /* Home content header styling */
 .home-content-container .sort-options {
     background: #1a1a1a; /* Match forum header color */
-    border-bottom: 1px solid #333333;
     border-radius: 8px 8px 0 0; /* Round top corners */
     padding: 1rem 1.5rem;
     margin: 0; /* Remove margin since container handles spacing */
@@ -1021,12 +1040,15 @@ body::before {
     background: #0a0a0a; /* Match body color */
     padding: 1rem 1.5rem;
     margin: 0; /* Remove margin since container handles spacing */
-    border-bottom: 1px solid #333333;
+    border-top: 1px solid #333333;
+}
+
+.home-content-container .content-entry:first-child {
+    border-top: none;
 }
 
 .home-content-container .content-entry:last-child {
     border-radius: 0 0 8px 8px; /* Round bottom corners on last entry */
-    border-bottom: none;
 }
 
 /* Blogs Content Container */
@@ -1040,7 +1062,6 @@ body::before {
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
     width: 100%; /* Full width without side margins */
-    min-height: calc(100vh - 13rem); /* Stretch to bottom of page */
     display: flex;
     flex-direction: column;
 }
@@ -1048,7 +1069,6 @@ body::before {
 /* Blogs content header styling */
 .blogs-content-container .sort-options {
     background: #1a1a1a; /* Match forum header color */
-    border-bottom: 1px solid #333333;
     border-radius: 8px 8px 0 0; /* Round top corners */
     padding: 1rem 1.5rem;
     margin: 0; /* Remove margin since container handles spacing */
@@ -1059,12 +1079,15 @@ body::before {
     background: #0a0a0a; /* Match body color */
     padding: 1rem 1.5rem;
     margin: 0; /* Remove margin since container handles spacing */
-    border-bottom: 1px solid #333333;
+    border-top: 1px solid #333333;
+}
+
+.blogs-content-container .content-entry:first-child {
+    border-top: none;
 }
 
 .blogs-content-container .content-entry:last-child {
     border-radius: 0 0 8px 8px; /* Round bottom corners on last entry */
-    border-bottom: none;
 }
 
 /* Forums Content Container */
@@ -1078,7 +1101,6 @@ body::before {
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
     width: 100%; /* Full width without side margins */
-    min-height: calc(100vh - 13rem); /* Stretch to bottom of page */
     display: flex;
     flex-direction: column;
 }
@@ -1086,7 +1108,6 @@ body::before {
 /* Forums content header styling */
 .forums-content-container .sort-options {
     background: #1a1a1a; /* Match forum header color */
-    border-bottom: 1px solid #333333;
     border-radius: 8px 8px 0 0; /* Round top corners */
     padding: 1rem 1.5rem;
     margin: 0; /* Remove margin since container handles spacing */
@@ -1109,6 +1130,7 @@ body::before {
 .forums-content-container .category-grid {
     background: #0a0a0a;
     border-radius: 0 0 8px 8px; /* Round bottom corners */
+    border-top: 1px solid #333333;
     padding: 1rem;
     flex: 1; /* Expand to fill available space */
     display: grid;
@@ -1676,7 +1698,7 @@ body::before {
     border: none;
     padding: 0;
     font-size: 1.2rem;
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
     font-weight: normal;
 }
 
@@ -2101,7 +2123,6 @@ body::before {
 
 /* Comments */
 .comments-section {
-    border-top: 1px solid #333333;
     margin-top: 1rem;
     padding-top: 1rem;
     margin-left: 1rem;
@@ -2109,7 +2130,8 @@ body::before {
 }
 
 .comment-form {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    padding-bottom: 8px;
 }
 
 .comment-form textarea {
@@ -2228,11 +2250,22 @@ body::before {
     font-size: 0.9rem;
 }
 
+/* Loading containers need proper positioning for vertical centering */
+#content-loading,
+#loading-post,
+#categories-loading,
+#forum-loading,
+#loading-container {
+    position: relative;
+    height: 400px; /* Minimum height for proper centering */
+}
+
 /* Loading messages should be centered horizontally and vertically */
 #content-loading .no-content-message,
 #loading-post .no-content-message,
 #categories-loading .no-content-message,
-#forum-loading .no-content-message {
+#forum-loading .no-content-message,
+#loading-container .no-content-message {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -2627,7 +2660,7 @@ body.mobile-nav-open .container {
     }
 
     .container {
-        padding: 1rem;
+        padding: 8px;
     }
 
     .content-header {
@@ -2722,7 +2755,7 @@ body.mobile-nav-open .container {
     }
 
     .container {
-        padding: 0.5rem;
+        padding: 8px;
     }
 
     /* Compact user auth section for very small screens */
@@ -2968,12 +3001,6 @@ body.mobile-nav-open .container {
     }
 }
 
-/* Terminal cursor animation */
-.logo::after {
-    content: '█';
-    animation: blink 1s infinite;
-    margin-left: 0.25rem;
-}
 
 /* Hover effects for terminal authenticity */
 /* Removed content title glow effect on terminal hover */

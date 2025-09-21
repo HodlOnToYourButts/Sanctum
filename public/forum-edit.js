@@ -18,7 +18,7 @@ function initializeMode() {
         isEditMode = false;
         document.getElementById('page-title').textContent = 'Create Forum Post | Sanctum';
         document.title = 'Create Forum Post | Sanctum';
-        document.getElementById('page-heading').textContent = 'Create New Forum Post';
+        document.getElementById('page-heading').textContent = 'Create Forum';
 
         // Pre-select category if provided in URL path: /forums/create/general
         if (pathParts.length >= 3 && pathParts[0] === 'forums' && pathParts[1] === 'create') {
@@ -58,10 +58,6 @@ function showLoggedInState(user) {
     document.getElementById('user-info').classList.add('show');
 
     let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
 
     document.getElementById('auth-section').innerHTML = authButtons;
 }

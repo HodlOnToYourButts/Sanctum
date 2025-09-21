@@ -141,7 +141,13 @@ function displayPost() {
     categoryElement.textContent = categoryName;
     categoryElement.href = categoryLink;
 
-    document.getElementById('post-title-text').textContent = currentPost.title;
+    // Add featured badge to title if featured
+    const titleElement = document.getElementById('post-title-text');
+    if (currentPost.featured) {
+        titleElement.innerHTML = `${escapeHtml(currentPost.title)}<span class="featured-badge">★</span>`;
+    } else {
+        titleElement.textContent = currentPost.title;
+    }
 
     // Update author info
     const authorName = currentPost.author?.name || 'Unknown';

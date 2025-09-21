@@ -17,7 +17,7 @@ function initializeMode() {
         isEditMode = false;
         document.getElementById('page-title').textContent = 'Create Blog | Sanctum';
         document.title = 'Create Blog | Sanctum';
-        document.getElementById('page-heading').textContent = 'Create New Blog';
+        document.getElementById('page-heading').textContent = 'Create Blog';
     }
 }
 
@@ -51,10 +51,6 @@ function showLoggedInState(user) {
     document.getElementById('user-info').classList.add('show');
 
     let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
-    if (user.roles && user.roles.includes('admin')) {
-        authButtons = '<a href="/admin" class="auth-button">Admin</a>' + authButtons;
-    }
 
     document.getElementById('auth-section').innerHTML = authButtons;
 }

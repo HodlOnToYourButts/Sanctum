@@ -55,8 +55,15 @@ async function loadPost() {
         document.getElementById('content-meta').innerHTML = `
             By ${escapeHtml(currentPost.author_name || 'Unknown')} •
             ${new Date(currentPost.created_at).toLocaleDateString()}
-            ${currentPost.featured ? '<span class="featured-badge">★</span>' : ''}
         `;
+
+        // Add featured badge to title if featured
+        const titleElement = document.getElementById('content-title');
+        if (currentPost.featured) {
+            titleElement.innerHTML = `${escapeHtml(currentPost.title)}<span class="featured-badge">★</span>`;
+        } else {
+            titleElement.textContent = currentPost.title;
+        }
         document.getElementById('content-body').textContent = currentPost.body;
 
         // Update voting

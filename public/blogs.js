@@ -116,14 +116,13 @@ function displayContentFeed(contentList) {
                     <div class="blog-title-section">
                         <span class="vote-score-left">${item.votes.score}</span>
                         <div>
-                            <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
+                            <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}${item.featured ? '<span class="featured-badge">★</span>' : ''}</div>
                             <div class="content-meta">
                                 By ${escapeHtml(item.author_name || 'Unknown')} •
                                 ${new Date(item.created_at).toLocaleDateString()}
                             </div>
                         </div>
                     </div>
-                    ${item.featured ? '<span class="featured-badge">★</span>' : ''}
                 </div>
                 <div class="content-body clickable-content" onclick="viewFullPost('${item._id}')">${escapeHtml(item.body.length > 300 ? item.body.substring(0, 300) + '...' : item.body)}</div>
             </div>
