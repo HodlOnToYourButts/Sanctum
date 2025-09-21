@@ -55,7 +55,7 @@ body::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 2rem;
+    padding: 0 8px;
     width: 100%;
     box-sizing: border-box;
     position: relative;
@@ -997,7 +997,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* Add 8px padding on all sides */
-    width: 100%; /* Full width without side margins */
+    width: calc(100% - 16px); /* Account for container padding */
 }
 
 /* Blog Post Container */
@@ -1007,7 +1007,7 @@ body::before {
     border-radius: 8px; /* Keep rounded corners */
     margin: 1.5rem 0 0 0; /* Match forum-post-container margin */
     padding: 8px; /* Set padding to 8px */
-    width: 100%; /* Full width since no left/right margin */
+    width: calc(100% - 16px); /* Account for container padding */
     display: flex;
     flex-direction: column;
 }
@@ -1022,7 +1022,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
-    width: 100%; /* Full width without side margins */
+    width: calc(100% - 18px); /* Account for container padding + content-item border */
     display: flex;
     flex-direction: column;
 }
@@ -1061,7 +1061,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
-    width: 100%; /* Full width without side margins */
+    width: calc(100% - 18px); /* Account for container padding + content-item border */
     display: flex;
     flex-direction: column;
 }
@@ -1100,7 +1100,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
-    width: 100%; /* Full width without side margins */
+    width: calc(100% - 18px); /* Account for container padding + content-item border */
     display: flex;
     flex-direction: column;
 }
@@ -2281,7 +2281,7 @@ body::before {
 #categories-list .page-forums .no-content-message {
     background: #0a0a0a;
     border: none;
-    border-bottom: 1px solid #333333;
+    border-top: 1px solid #333333;
     border-radius: 0 0 8px 8px;
     margin: 0;
     max-width: none;
@@ -2636,7 +2636,7 @@ body.mobile-nav-open .container {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: 0 1rem;
+        padding: 0 8px;
         position: relative;
     }
 
@@ -2751,7 +2751,7 @@ body.mobile-nav-open .container {
     }
 
     .header-content {
-        padding: 0 0.5rem;
+        padding: 0 8px;
     }
 
     .container {
