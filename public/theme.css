@@ -1022,7 +1022,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
-    width: calc(100% - 18px); /* Account for container padding + content-item border */
+    width: 100%; /* Full width inside content-item */
     display: flex;
     flex-direction: column;
 }
@@ -1061,7 +1061,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
-    width: calc(100% - 18px); /* Account for container padding + content-item border */
+    width: 100%; /* Full width inside content-item */
     display: flex;
     flex-direction: column;
 }
@@ -1100,7 +1100,7 @@ body::before {
     margin-left: 0; /* Remove left margin */
     margin-right: 0; /* Remove right margin */
     padding: 8px; /* 8px padding on all sides */
-    width: calc(100% - 18px); /* Account for container padding + content-item border */
+    width: 100%; /* Full width inside content-item */
     display: flex;
     flex-direction: column;
 }
