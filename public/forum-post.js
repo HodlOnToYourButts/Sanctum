@@ -27,11 +27,16 @@ function getPostId() {
 
 async function checkAuth() {
     try {
+        console.log('Checking authentication status via /user endpoint');
         const response = await fetch('/user');
+        console.log('Auth response status:', response.status);
+
         if (response.ok) {
             const user = await response.json();
+            console.log('User authenticated, calling showLoggedInState with:', user);
             showLoggedInState(user);
         } else if (response.status === 401) {
+            console.log('User not authenticated (401), calling showLoggedOutState');
             showLoggedOutState();
         } else {
             console.warn('Auth check returned unexpected status:', response.status);
@@ -43,13 +48,16 @@ async function checkAuth() {
     }
 }
 
-function showLoggedInState(user) {
+async function showLoggedInState(user) {
+    console.log('showLoggedInState called with user:', user);
+    console.log('typeof generateAuthButtons:', typeof generateAuthButtons);
+
     currentUser = user;
     document.getElementById('user-name-header').textContent = user.name || 'User';
     document.getElementById('user-info').classList.add('show');
 
-    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
+    const authButtons = await generateAuthButtons();
+    console.log('Setting auth-section innerHTML to:', authButtons);
     document.getElementById('auth-section').innerHTML = authButtons;
 
     // Clear any login prompts that might be showing

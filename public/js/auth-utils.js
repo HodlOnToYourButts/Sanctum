@@ -8,7 +8,7 @@ async function checkAuth() {
     const cachedAuth = getCachedAuth();
     if (cachedAuth) {
         if (cachedAuth.user) {
-            showLoggedInState(cachedAuth.user);
+            await showLoggedInState(cachedAuth.user);
         } else {
             showLoggedOutState();
         }
@@ -23,7 +23,7 @@ async function checkAuth() {
         if (response.ok) {
             const user = await response.json();
             setCachedAuth({ user });
-            showLoggedInState(user);
+            await showLoggedInState(user);
         } else if (response.status === 401) {
             setCachedAuth({ user: null });
             showLoggedOutState();
@@ -67,13 +67,12 @@ function hideStaticLoading() {
     }
 }
 
-function showLoggedInState(user) {
+async function showLoggedInState(user) {
     currentUser = user;
     document.getElementById('user-name-header').textContent = user.name || 'User';
     document.getElementById('user-info').classList.add('show');
 
-    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
+    const authButtons = await generateAuthButtons();
     document.getElementById('auth-section').innerHTML = authButtons;
 }
 

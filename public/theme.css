@@ -2013,6 +2013,38 @@ body::before {
     box-shadow: 0 0 5px #ff4444;
 }
 
+.auth-button.profile {
+    border-color: #00aaff;
+    color: #00aaff;
+    padding: 0.25rem 0.5rem;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-button.profile:hover {
+    background: #00aaff;
+    color: #000000;
+    box-shadow: 0 0 5px #00aaff;
+}
+
+.profile-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.auth-button.profile:hover .profile-icon {
+    filter: brightness(0);
+}
+
+.profile-icon-fallback {
+    font-size: 14px;
+}
+
 #auth-section {
     display: flex;
     align-items: center;

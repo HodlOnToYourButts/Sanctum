@@ -20,8 +20,8 @@ function updateBlogPostAuth(user) {
 const originalShowLoggedInState = showLoggedInState;
 const originalShowLoggedOutState = showLoggedOutState;
 
-showLoggedInState = function(user) {
-    originalShowLoggedInState(user);
+showLoggedInState = async function(user) {
+    await originalShowLoggedInState(user);
     updateBlogPostAuth(user);
 };
 

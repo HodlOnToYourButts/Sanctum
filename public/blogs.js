@@ -24,8 +24,8 @@ function showBlogsLoggedOutState() {
 const originalShowLoggedInState = showLoggedInState;
 const originalShowLoggedOutState = showLoggedOutState;
 
-showLoggedInState = function(user) {
-    originalShowLoggedInState(user);
+showLoggedInState = async function(user) {
+    await originalShowLoggedInState(user);
     showBlogsLoggedInState(user);
 };
 

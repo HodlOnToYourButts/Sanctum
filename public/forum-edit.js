@@ -52,13 +52,12 @@ async function checkAuth() {
     }
 }
 
-function showLoggedInState(user) {
+async function showLoggedInState(user) {
     currentUser = user;
     document.getElementById('user-name-header').textContent = user.name || 'User';
     document.getElementById('user-info').classList.add('show');
 
-    let authButtons = '<button class="auth-button logout" onclick="logout()">Logout</button>';
-
+    const authButtons = await generateAuthButtons();
     document.getElementById('auth-section').innerHTML = authButtons;
 }
 
