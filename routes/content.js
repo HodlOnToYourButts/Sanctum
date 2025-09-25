@@ -5,7 +5,7 @@ const winston = require('winston');
 const { getVoteCounts, getUserVote, createVote, removeVote, getBulkVoteCounts } = require('../lib/vote-helpers');
 
 // Use bypass auth in development, OIDC in production
-const authModule = process.env.BYPASS_OIDC === 'true'
+const authModule = (process.env.DEVELOPMENT_MODE === 'true' && process.env.BYPASS_AUTH === 'true')
   ? require('../lib/bypass-auth')
   : require('../lib/oidc-auth');
 

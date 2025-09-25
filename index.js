@@ -8,7 +8,7 @@ const winston = require('winston');
 const database = require('./lib/database');
 
 // Use bypass auth in development, OIDC in production
-const authModule = process.env.BYPASS_OIDC === 'true'
+const authModule = (process.env.DEVELOPMENT_MODE === 'true' && process.env.BYPASS_AUTH === 'true')
   ? require('./lib/bypass-auth')
   : require('./lib/oidc-auth');
 
@@ -52,7 +52,8 @@ app.use(express.static('public'));
 // Auth routes at root level
 app.get('/login', (req, res, next) => {
   logger.info('Login route accessed', {
-    bypassMode: process.env.BYPASS_OIDC === 'true',
+    developmentMode: process.env.DEVELOPMENT_MODE === 'true',
+    bypassAuth: process.env.BYPASS_AUTH === 'true',
     sessionId: req.sessionID,
     userAgent: req.get('User-Agent'),
     query: req.query
@@ -183,10 +184,10 @@ app.get('/debug/oauth', (req, res) => {
   }
 
   res.json({
-    issuer: process.env.ZOMBIEAUTH_ISSUER || 'NOT_SET',
-    clientId: process.env.ZOMBIEAUTH_CLIENT_ID ? 'SET' : 'NOT_SET',
-    clientSecret: process.env.ZOMBIEAUTH_CLIENT_SECRET ? 'SET' : 'NOT_SET',
-    callbackUrl: process.env.ZOMBIEAUTH_CALLBACK_URL || 'NOT_SET',
+    issuer: process.env.ISSUER || 'NOT_SET',
+    clientId: process.env.CLIENT_ID ? 'SET' : 'NOT_SET',
+    clientSecret: process.env.CLIENT_SECRET ? 'SET' : 'NOT_SET',
+    callbackUrl: process.env.CALLBACK_URL || 'NOT_SET',
     expectedCallback: `${req.protocol}://${req.get('host')}/callback`
   });
 });

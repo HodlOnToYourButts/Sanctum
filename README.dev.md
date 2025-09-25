@@ -22,7 +22,7 @@
 
 ## Test Users
 
-When `BYPASS_OIDC=true`, you can login as any of these test users:
+When `DEVELOPMENT_MODE=true` AND `BYPASS_AUTH=true`, you can login as any of these test users:
 
 | Username     | Password     | Roles        | Description |
 |-------------|-------------|-------------|-------------|
@@ -37,7 +37,7 @@ Copy `.env.development` to `.env` or set these variables:
 
 ```bash
 NODE_ENV=development
-BYPASS_OIDC=true
+DEVELOPMENT_MODE=true
 SESSION_SECRET=dev-secret-key
 INSTANCE_ID=dev-local
 COUCHDB_URL=http://localhost:5984
@@ -87,15 +87,15 @@ curl http://localhost:5984
 
 ## Production Deployment
 
-For production, set `BYPASS_OIDC=false` (or remove it) and configure proper OIDC settings:
+For production, set `DEVELOPMENT_MODE=false` and `BYPASS_AUTH=false` (or remove them) and configure proper OIDC settings:
 
 ```bash
 NODE_ENV=production
-BYPASS_OIDC=false
-ZOMBIEAUTH_ISSUER=https://your-oidc-provider.com
-ZOMBIEAUTH_CLIENT_ID=your-client-id
-ZOMBIEAUTH_CLIENT_SECRET=your-client-secret
-ZOMBIEAUTH_CALLBACK_URL=https://your-domain.com/callback
+DEVELOPMENT_MODE=false
+ISSUER=https://your-oidc-provider.com
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
+CALLBACK_URL=https://your-domain.com/callback
 ```
 
 ## Features in Development Mode

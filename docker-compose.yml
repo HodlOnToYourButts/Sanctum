@@ -6,18 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=development
-      - BYPASS_OIDC=true
-      - SESSION_SECRET=dev-secret-key
-      - INSTANCE_ID=dev-local
-      - COUCHDB_URL=http://couchdb:5984
-      - COUCHDB_DATABASE=sanctum_dev
-      - COUCHDB_USERNAME=admin
-      - COUCHDB_PASSWORD=password
-    depends_on:
-      - couchdb
+      - "28080:8080"
+    env_file:
+      - .env.dev.sanctum
     volumes:
       - .:/app
       - /app/node_modules
@@ -31,16 +22,6 @@ services:
             - node_modules/
     restart: unless-stopped
 
-  couchdb:
-    image: couchdb:3.3
-    ports:
-      - "5984:5984"
-    environment:
-      - COUCHDB_USER=admin
-      - COUCHDB_PASSWORD=password
-    volumes:
-      - couchdb_data:/opt/couchdb/data
-    restart: unless-stopped
-
-volumes:
-  couchdb_data:
+networks:
+  default:
+    name: development
