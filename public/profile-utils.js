@@ -43,9 +43,21 @@ async function getSSOSiteUrl() {
 async function getSSOFaviconUrl() {
     const ssoSiteUrl = await getSSOSiteUrl();
     if (ssoSiteUrl) {
-        // Skip favicon for localhost to avoid CORS issues
+        // For development, try to fetch favicon from the OIDC provider directly
         const url = new URL(ssoSiteUrl);
         if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+            // In development, try fetching from the original OIDC issuer
+            try {
+                const response = await fetch('/debug/oauth');
+                if (response.ok) {
+                    const oauthConfig = await response.json();
+                    if (oauthConfig.issuer && oauthConfig.issuer !== 'NOT_SET') {
+                        return `${oauthConfig.issuer}/favicon.svg`;
+                    }
+                }
+            } catch (error) {
+                console.log('Could not fetch OIDC config for favicon');
+            }
             return null;
         }
         return `${ssoSiteUrl}/favicon.svg`;

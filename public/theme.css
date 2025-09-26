@@ -2014,8 +2014,8 @@ body::before {
 }
 
 .auth-button.profile {
-    border-color: #00aaff;
-    color: #00aaff;
+    border-color: #00aa44;
+    color: #00aa44;
     padding: 0.25rem 0.5rem;
     min-width: 32px;
     height: 32px;
@@ -2025,20 +2025,24 @@ body::before {
 }
 
 .auth-button.profile:hover {
-    background: #00aaff;
+    background: #00aa44;
     color: #000000;
-    box-shadow: 0 0 5px #00aaff;
+    box-shadow: 0 0 5px #00aa44;
 }
 
 .profile-icon {
     width: 16px;
     height: 16px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    /* Remove filter for favicons - show them in their natural colors */
 }
 
 .auth-button.profile:hover .profile-icon {
-    filter: brightness(0);
+    /* Remove filter on hover too - let favicon stay as is */
+}
+
+.auth-button.profile::before {
+    content: '';
 }
 
 .profile-icon-fallback {

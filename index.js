@@ -93,7 +93,6 @@ app.get('/user', async (req, res) => {
 // Site settings API
 app.get('/api/settings', async (req, res) => {
   try {
-    await database.connect();
     const db = database.getDb();
 
     try {
@@ -129,7 +128,6 @@ app.put('/api/settings', authModule.requireOidcAuth('admin'), async (req, res) =
         return res.status(400).json({ error: 'Site name is required' });
       }
 
-      await database.connect();
       const db = database.getDb();
 
       let settings = {

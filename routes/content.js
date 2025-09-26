@@ -2,6 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const database = require('../lib/database');
 const winston = require('winston');
+const crypto = require('crypto');
 const { getVoteCounts, getUserVote, createVote, removeVote, getBulkVoteCounts } = require('../lib/vote-helpers');
 
 // Use bypass auth in development, OIDC in production
@@ -9,7 +10,83 @@ const authModule = (process.env.DEVELOPMENT_MODE === 'true' && process.env.BYPAS
   ? require('../lib/bypass-auth')
   : require('../lib/oidc-auth');
 
-const { requireOidcAuth } = authModule;
+const { requireOidcAuth, getCurrentUser } = authModule;
+
+// Middleware to populate req.user from session (optional auth)
+function populateUser(req, res, next) {
+  req.user = getCurrentUser(req);
+  next();
+}
+
+// Helper function to resolve user information
+async function resolveUserInfo(db, authorId, fallbackAuthor = null) {
+  if (!authorId) {
+    return { name: 'Unknown', id: null };
+  }
+
+  try {
+    const userDoc = await db.get(authorId);
+    if (userDoc.type === 'user') {
+      return {
+        name: userDoc.name,
+        id: userDoc._id,
+        email: userDoc.email,
+        roles: userDoc.roles
+      };
+    }
+  } catch (error) {
+    // User document not found, fall back to embedded author data if available
+    if (fallbackAuthor) {
+      return {
+        name: fallbackAuthor.name || 'Unknown',
+        id: fallbackAuthor.id || authorId
+      };
+    }
+  }
+
+  return { name: 'Unknown User', id: authorId };
+}
+
+// Helper function to resolve multiple users efficiently
+async function resolveMultipleUsers(db, authorIds) {
+  const uniqueIds = [...new Set(authorIds.filter(id => id))];
+  if (uniqueIds.length === 0) return {};
+
+  try {
+    const result = await db.find({
+      selector: {
+        _id: { $in: uniqueIds },
+        type: 'user'
+      }
+    });
+
+    const userMap = {};
+    result.docs.forEach(doc => {
+      userMap[doc._id] = {
+        name: doc.name,
+        id: doc._id,
+        email: doc.email,
+        roles: doc.roles
+      };
+    });
+
+    // Add fallback for missing users
+    uniqueIds.forEach(id => {
+      if (!userMap[id]) {
+        userMap[id] = { name: 'Unknown User', id };
+      }
+    });
+
+    return userMap;
+  } catch (error) {
+    logger.error('Error resolving multiple users', { error: error.message });
+    const fallbackMap = {};
+    uniqueIds.forEach(id => {
+      fallbackMap[id] = { name: 'Unknown User', id };
+    });
+    return fallbackMap;
+  }
+}
 
 const logger = winston.createLogger({
   level: 'info',
@@ -57,9 +134,8 @@ const forumSchema = Joi.object({
 
 const contentSchema = Joi.alternatives().try(pageSchema, blogSchema, forumSchema);
 
-router.get('/', async (req, res) => {
+router.get('/', populateUser, async (req, res) => {
   try {
-    await database.connect(); // Ensure database connection
     const db = database.getDb();
     const { type, status, limit = 20, skip = 0 } = req.query;
 
@@ -87,17 +163,14 @@ router.get('/', async (req, res) => {
       // Remove sort for now to avoid index requirement
     });
 
+    // Collect all author IDs for bulk user resolution
+    const authorIds = result.docs.map(doc => doc.author_id || doc.author?.id).filter(id => id);
+    const userMap = await resolveMultipleUsers(db, authorIds);
+
     const items = result.docs.map(doc => {
-      // Debug logging for author information - log every document
-      logger.info('Processing document for display', {
-        docId: doc._id,
-        docType: doc.type,
-        hasAuthor: !!doc.author,
-        authorName: doc.author?.name,
-        authorNameType: typeof doc.author?.name,
-        authorNameLength: doc.author?.name ? doc.author.name.length : 0,
-        fullAuthor: doc.author
-      });
+      // Try to resolve user from author_id first, then fall back to embedded author
+      const authorId = doc.author_id || doc.author?.id;
+      const resolvedUser = userMap[authorId] || { name: doc.author?.name || 'Unknown', id: authorId };
 
       return {
         _id: doc._id,
@@ -107,8 +180,8 @@ router.get('/', async (req, res) => {
         status: doc.status,
         created_at: doc.created_at,
         updated_at: doc.updated_at,
-        author_name: doc.author?.name || 'Unknown',
-        author_id: doc.author?.id,
+        author_name: resolvedUser.name,
+        author_id: resolvedUser.id,
         tags: doc.tags || []
       };
     });
@@ -121,9 +194,8 @@ router.get('/', async (req, res) => {
 });
 
 // Get homepage feed with promotable content (must be before /:id route)
-router.get('/feed', async (req, res) => {
+router.get('/feed', populateUser, async (req, res) => {
   try {
-    await database.connect();
     const db = database.getDb();
     const { type, category, sort = 'new', limit = 20, skip = 0 } = req.query;
 
@@ -145,33 +217,42 @@ router.get('/feed', async (req, res) => {
     const isUserModerator = req.user && req.user.roles && (req.user.roles.includes('admin') || req.user.roles.includes('moderator'));
 
     // Filter and process results
-    let items = result.docs
-      .filter(doc => {
-        // Only include published content
-        if (doc.status !== 'published') return false;
+    const filteredDocs = result.docs.filter(doc => {
+      // Only include published content
+      if (doc.status !== 'published') return false;
 
-        // Hide disabled content from non-moderators
-        if (doc.enabled === false && !isUserModerator) return false;
+      // Hide disabled content from non-moderators
+      if (doc.enabled === false && !isUserModerator) return false;
 
-        // Filter by type and promotion status
-        if (type && type !== 'all') {
-          // For specific type pages (/blogs, /forums), show all published content of that type
-          if (doc.type !== type) return false;
+      // Filter by type and promotion status
+      if (type && type !== 'all') {
+        // For specific type pages (/blogs, /forums), show all published content of that type
+        if (doc.type !== type) return false;
 
-          // Additional category filtering for forum posts
-          if (type === 'forum' && category && doc.category !== category) {
-            return false;
-          }
-
-          return true;
+        // Additional category filtering for forum posts
+        if (type === 'forum' && category && doc.category !== category) {
+          return false;
         }
-        // For homepage ('all'), only show explicitly featured content
-        if (type === 'all') {
-          return doc.featured === true;
-        }
+
         return true;
-      })
-      .map(doc => ({
+      }
+      // For homepage ('all'), only show explicitly featured content
+      if (type === 'all') {
+        return doc.featured === true;
+      }
+      return true;
+    });
+
+    // Collect all author IDs for bulk user resolution
+    const authorIds = filteredDocs.map(doc => doc.author_id || doc.author?.id).filter(id => id);
+    const userMap = await resolveMultipleUsers(db, authorIds);
+
+    let items = filteredDocs.map(doc => {
+      // Try to resolve user from author_id first, then fall back to embedded author
+      const authorId = doc.author_id || doc.author?.id;
+      const resolvedUser = userMap[authorId] || { name: doc.author?.name || 'Unknown', id: authorId };
+
+      return {
         _id: doc._id,
         type: doc.type,
         category: doc.category, // Include category for forum posts
@@ -179,15 +260,15 @@ router.get('/feed', async (req, res) => {
         body: doc.body ? (doc.body.substring(0, 300) + (doc.body.length > 300 ? '...' : '')) : '',
         created_at: doc.created_at,
         updated_at: doc.updated_at,
-        author_name: doc.author?.name,
-        author_id: doc.author?.id,
+        author_name: resolvedUser.name,
+        author_id: resolvedUser.id,
         tags: doc.tags || [],
         votes: { up: 0, down: 0, score: 0 }, // Will be populated below
-        allow_comments: doc.allow_comments,
         comment_count: 0, // Will be calculated below
         featured: doc.featured || false,
         pinned: doc.pinned || false
-      }));
+      };
+    });
 
     // Get vote counts for all items efficiently using bulk query
     const contentIds = items.map(item => item._id);
@@ -245,66 +326,6 @@ router.get('/feed', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
-  try {
-    const db = database.getDb();
-    const content = await db.get(req.params.id);
-
-    if (content.type === 'user') {
-      return res.status(404).json({ error: 'Content not found' });
-    }
-
-    // Check if content is disabled and user is not a moderator
-    const isUserModerator = req.user && req.user.roles && (req.user.roles.includes('admin') || req.user.roles.includes('moderator'));
-    if (content.enabled === false && !isUserModerator) {
-      return res.status(404).json({ error: 'Content not found' });
-    }
-
-    // Calculate comment/reply count for this content
-    if (['blog', 'forum'].includes(content.type)) {
-      try {
-        const responseType = content.type === 'forum' ? 'reply' : 'comment';
-        const responseResult = await db.find({
-          selector: {
-            type: responseType,
-            content_id: content._id,
-            status: { $in: ['approved', 'pending'] }
-          }
-        });
-        content.comment_count = responseResult.docs.length;
-      } catch (error) {
-        logger.error('Error counting responses for single content', { contentId: content._id, error: error.message });
-        content.comment_count = 0;
-      }
-    }
-
-    // Get vote counts for this content item
-    try {
-      const votes = await getVoteCounts(db, content._id);
-      content.votes = votes;
-    } catch (error) {
-      logger.error('Error getting votes for content', { contentId: content._id, error: error.message });
-      content.votes = { up: 0, down: 0, score: 0 };
-    }
-
-    // Transform the content to match frontend expectations
-    const transformedContent = {
-      ...content,
-      author_name: content.author?.name || 'Unknown',
-      author_id: content.author?.id
-    };
-
-    res.json(transformedContent);
-  } catch (error) {
-    if (error.statusCode === 404) {
-      res.status(404).json({ error: 'Content not found' });
-    } else {
-      logger.error('Error fetching content', { id: req.params.id, error: error.message });
-      res.status(500).json({ error: 'Failed to fetch content' });
-    }
-  }
-});
-
 router.post('/', requireOidcAuth(), async (req, res) => {
   try {
     const { error, value } = contentSchema.validate(req.body);
@@ -312,7 +333,6 @@ router.post('/', requireOidcAuth(), async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    await database.connect(); // Ensure database connection
     const db = database.getDb();
 
     // Debug logging for author information
@@ -324,30 +344,18 @@ router.post('/', requireOidcAuth(), async (req, res) => {
       fullUser: req.user
     });
 
+    // Generate prefixed UUID based on content type
+    const contentId = `${value.type}:${crypto.randomUUID()}`;
+
     const content = {
+      _id: contentId,
       ...value,
-      author: {
-        id: req.user.id,
-        name: req.user.name,
-        email: req.user.email,
-        roles: req.user.roles || []
-      },
+      author_id: req.user.id, // Reference to user document instead of embedding
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      votes: {
-        up: 0,
-        down: 0,
-        score: 0
-      },
-      voter_list: [] // Track who voted to prevent duplicate votes
+      updated_at: new Date().toISOString()
     };
 
-    // Always enable comments for all content
-    content.allow_comments = true;
-
-
     const result = await db.insert(content);
-    content._id = result.id;
     content._rev = result.rev;
 
     logger.info('Content created', {
@@ -379,7 +387,8 @@ router.put('/:id', requireOidcAuth(), async (req, res) => {
     }
 
     // Check if user can edit this content (author, admin, or moderator)
-    const isAuthor = existingContent.author?.id === req.user.id;
+    const authorId = existingContent.author_id || existingContent.author?.id;
+    const isAuthor = authorId === req.user.id;
     const isModerator = req.user.roles.includes('admin') || req.user.roles.includes('moderator');
 
     if (!isAuthor && !isModerator) {
@@ -421,7 +430,8 @@ router.delete('/:id', requireOidcAuth(), async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
-    if (content.author.id !== req.user.id && !(req.user.currentRoles && req.user.currentRoles.includes('admin'))) {
+    const authorId = content.author_id || content.author?.id;
+    if (authorId !== req.user.id && !(req.user.currentRoles && req.user.currentRoles.includes('admin'))) {
       return res.status(403).json({ error: 'Cannot delete content by another author' });
     }
 
@@ -454,7 +464,6 @@ const commentSchema = Joi.object({
 // Get comments for a specific blog post
 router.get('/:id/comments', async (req, res) => {
   try {
-    await database.connect(); // Ensure database connection
     const db = database.getDb();
 
     // First check if the content exists and allows comments
@@ -463,9 +472,6 @@ router.get('/:id/comments', async (req, res) => {
       return res.status(400).json({ error: 'Comments only available for blogs, articles, and forum posts' });
     }
 
-    if (!content.allow_comments) {
-      return res.status(403).json({ error: 'Comments are disabled for this post' });
-    }
 
     // Find comments for this content (removed sort to avoid index issues)
     const result = await db.find({
@@ -510,7 +516,6 @@ router.post('/:id/comments', async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    await database.connect(); // Ensure database connection
     const db = database.getDb();
 
     // Check if the content exists and allows comments
@@ -519,9 +524,6 @@ router.post('/:id/comments', async (req, res) => {
       return res.status(400).json({ error: 'Comments only available for blogs, articles, and forum posts' });
     }
 
-    if (!content.allow_comments) {
-      return res.status(403).json({ error: 'Comments are disabled for this post' });
-    }
 
     const comment = {
       type: 'comment',
@@ -610,7 +612,6 @@ router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
       return res.status(400).json({ error: 'Invalid vote type' });
     }
 
-    await database.connect();
     const db = database.getDb();
 
     // Verify content exists
@@ -626,13 +627,22 @@ router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
     if (vote === 'remove') {
       await removeVote(db, contentId, userId);
     } else {
-      await createVote(db, contentId, userId, vote);
+      // Check if user already has this vote type - if so, remove it (toggle off)
+      const currentUserVote = await getUserVote(db, userId, contentId);
+
+      if (currentUserVote === vote) {
+        // User clicked the same vote type again - remove the vote (toggle off)
+        await removeVote(db, contentId, userId);
+      } else {
+        // User is changing vote or voting for first time
+        await createVote(db, contentId, userId, vote);
+      }
     }
 
     // Get updated vote counts and user vote
     const [votes, userVote] = await Promise.all([
       getVoteCounts(db, contentId),
-      vote === 'remove' ? null : getUserVote(db, userId, contentId)
+      getUserVote(db, userId, contentId)
     ]);
 
     res.json({
@@ -658,7 +668,7 @@ router.post('/:id/vote', requireOidcAuth(), async (req, res) => {
 });
 
 // Get individual content item by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', populateUser, async (req, res) => {
   try {
     const db = database.getDb();
     const content = await db.get(req.params.id);
@@ -673,11 +683,24 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Content not found' });
     }
 
+    // Resolve user information for the content author
+    const authorId = content.author_id || content.author?.id;
+    const resolvedUser = await resolveUserInfo(db, authorId, content.author);
+
+    // Get vote counts for this content item
+    try {
+      const votes = await getVoteCounts(db, content._id);
+      content.votes = votes;
+    } catch (error) {
+      logger.error('Error getting votes for content', { contentId: content._id, error: error.message });
+      content.votes = { up: 0, down: 0, score: 0 };
+    }
+
     // Transform the content to match frontend expectations
     const transformedContent = {
       ...content,
-      author_name: content.author?.name || 'Unknown',
-      author_id: content.author?.id
+      author_name: resolvedUser.name,
+      author_id: resolvedUser.id
     };
 
     // Debug logging to see what we're returning
@@ -852,7 +875,6 @@ const replySchema = Joi.object({
 // Get replies for a specific forum post
 router.get('/:id/replies', async (req, res) => {
   try {
-    await database.connect();
     const db = database.getDb();
 
     // Check if the content exists and is a forum post
@@ -910,7 +932,6 @@ router.post('/:id/replies', async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    await database.connect();
     const db = database.getDb();
 
     // Check if the content exists and is a forum post
@@ -961,7 +982,6 @@ router.put('/replies/:replyId', requireOidcAuth(), async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    await database.connect();
     const db = database.getDb();
     const reply = await db.get(req.params.replyId);
 
@@ -1006,7 +1026,6 @@ router.put('/replies/:replyId', requireOidcAuth(), async (req, res) => {
 // Get user statistics (post count, join date, etc.)
 router.get('/user/:identifier/stats', async (req, res) => {
   try {
-    await database.connect();
     const db = database.getDb();
 
     const identifier = req.params.identifier;
