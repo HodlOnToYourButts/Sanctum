@@ -204,7 +204,8 @@ function displayPost() {
 }
 
 function formatPostContent(content) {
-    return content.replace(/\n/g, '<br>');
+    // SECURITY: Escape HTML first, then replace newlines with <br>
+    return escapeHtml(content).replace(/\n/g, '<br>');
 }
 
 function updateVoting() {
