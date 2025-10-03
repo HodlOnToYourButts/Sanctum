@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Sanctum Admin Panel">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="author" content="Sanctum">
+    <meta name="copyright" content="Sanctum">
     <title>Sanctum | Admin</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/theme.css">
@@ -18,7 +23,7 @@
     </div>
 
     <div class="container">
-        <div id="auth-check" class="loading">Checking admin privileges...</div>
+        <div id="auth-check" class="loading" data-nosnippet>Checking admin privileges...</div>
 
         <div id="admin-content" style="display: none;">
             <!-- Site Settings -->
@@ -81,7 +86,7 @@
                 <!-- Existing Content -->
                 <div>
                     <h3>Existing Content</h3>
-                    <div id="content-loading" class="loading">Loading content...</div>
+                    <div id="content-loading" class="loading" data-nosnippet>Loading content...</div>
                     <div id="content-list" class="content-grid"></div>
                 </div>
             </div>

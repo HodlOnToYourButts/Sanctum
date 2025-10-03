@@ -49,8 +49,19 @@ async function loadPost() {
         currentPost = await response.json();
 
         // Update page title
-        document.getElementById('post-title').textContent = `${currentPost.title} | Sanctum`;
-        document.title = `${currentPost.title} | Sanctum`;
+        document.getElementById('post-title').textContent = `Sanctum | Blogs | ${currentPost.title}`;
+        document.title = `Sanctum | Blogs | ${currentPost.title}`;
+
+        // Update meta tags
+        const description = currentPost.body.substring(0, 160).replace(/\n/g, ' ');
+        document.getElementById('post-description').setAttribute('content', description);
+        document.getElementById('post-author').setAttribute('content', currentPost.author_name || 'Sanctum');
+
+        // Update keywords if tags are available
+        if (currentPost.tags && currentPost.tags.length > 0) {
+            const keywords = `sanctum, blog, ${currentPost.tags.join(', ')}`;
+            document.getElementById('post-keywords').setAttribute('content', keywords);
+        }
 
         // Display post content
         document.getElementById('content-title').textContent = currentPost.title;
@@ -117,7 +128,7 @@ function updateCommentForm() {
         `;
     } else {
         formContent.innerHTML = `
-            <div class="login-prompt">
+            <div class="login-prompt" data-nosnippet>
                 <div class="login-prompt-content">
                     <p>You must be logged in to leave a comment.</p>
                     <button class="auth-button" onclick="goToLogin()">Login</button>
@@ -263,7 +274,7 @@ async function loadComments() {
         const commentsList = document.getElementById('comments-list');
 
         if (comments.length === 0) {
-            commentsList.innerHTML = '<p class="no-comments-blog"></p>';
+            commentsList.innerHTML = '<p class="no-comments-blog" data-nosnippet></p>';
             return;
         }
 

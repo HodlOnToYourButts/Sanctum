@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Sitemap: /sitemap.xml
+
+# Disallow admin and auth pages
+Disallow: /admin
+Disallow: /login
+Disallow: /callback
+Disallow: /logout
+
+# Disallow edit/create pages
+Disallow: /blogs/create
+Disallow: /blogs/edit/
+Disallow: /forums/create/
+Disallow: /forums/edit/
+
+# Disallow API endpoints
+Disallow: /api/
+Disallow: /user
+Disallow: /debug/

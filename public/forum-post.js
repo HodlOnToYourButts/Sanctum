@@ -139,13 +139,22 @@ async function loadPost() {
 
 function displayPost() {
     // Update page titles
-    document.title = `${currentPost.title} | Sanctum`;
-    document.getElementById('post-title').textContent = `${currentPost.title} | Sanctum`;
+    document.title = `Sanctum | Forums | ${currentPost.title}`;
+    document.getElementById('post-title').textContent = `Sanctum | Forums | ${currentPost.title}`;
+
+    // Update meta tags
+    const description = currentPost.body.substring(0, 160).replace(/\n/g, ' ');
+    document.getElementById('post-description').setAttribute('content', description);
+    document.getElementById('post-author').setAttribute('content', currentPost.author_name || 'Sanctum');
 
     // Update post header with clickable category
     const categorySlug = currentPost.category || 'general-discussion';
     const categoryName = getCategoryDisplayName(categorySlug);
     const categoryLink = `/forums/category/${getCategorySlug(categorySlug)}`;
+
+    // Update keywords with category
+    const keywords = `sanctum, forum, ${categoryName}, discussion`;
+    document.getElementById('post-keywords').setAttribute('content', keywords);
 
     const categoryElement = document.getElementById('post-category-header');
     categoryElement.textContent = categoryName;
@@ -323,6 +332,7 @@ function updateCommentForm() {
             if (commentFormContainer && !commentFormContainer.querySelector('.login-prompt')) {
                 const loginPrompt = document.createElement('div');
                 loginPrompt.className = 'login-prompt';
+                loginPrompt.setAttribute('data-nosnippet', '');
                 loginPrompt.innerHTML = `
                     <div class="login-prompt-content">
                         <p>You must be logged in to reply to this post.</p>
@@ -678,7 +688,7 @@ function displayReplies(replies) {
     const commentsList = document.getElementById('comments-list');
 
     if (replies.length === 0) {
-        commentsList.innerHTML = '<p class="no-replies-forum"></p>';
+        commentsList.innerHTML = '<p class="no-replies-forum" data-nosnippet></p>';
         return;
     }
 
@@ -710,7 +720,7 @@ function displayReplies(replies) {
                     <div class="reply-author-details">
                         <div class="reply-author-name">${escapeHtml(reply.author_name)}</div>
                         <div class="reply-author-role">${replyRoleDisplay}</div>
-                        <div class="reply-author-stats">
+                        <div class="reply-author-stats" data-nosnippet>
                             <div class="author-stat">
                                 <span class="stat-label">Posts:</span>
                                 <span class="stat-value" id="reply-author-posts-${index}">—</span>

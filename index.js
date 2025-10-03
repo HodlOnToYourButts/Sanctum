@@ -165,6 +165,61 @@ app.put('/api/settings', authModule.requireOidcAuth('admin'), async (req, res) =
 
 app.use('/api/content', contentRoutes);
 
+// Dynamic sitemap.xml
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const db = database.getDb();
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+
+    // Get all published blog and forum posts
+    const result = await db.find({
+      selector: {
+        type: { $in: ['blog', 'forum'] },
+        status: 'published',
+        enabled: { $ne: false }
+      },
+      limit: 10000
+    });
+
+    let urls = [
+      { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'daily' },
+      { loc: `${baseUrl}/blogs`, priority: '0.9', changefreq: 'daily' },
+      { loc: `${baseUrl}/forums`, priority: '0.9', changefreq: 'daily' }
+    ];
+
+    // Add blog posts
+    result.docs.forEach(doc => {
+      const uuid = doc._id.replace(/^(blog:|forum:)/, '');
+      const path = doc.type === 'blog' ? `/blogs/view/${uuid}` : `/forums/view/${uuid}`;
+      const lastmod = doc.updated_at || doc.created_at;
+
+      urls.push({
+        loc: `${baseUrl}${path}`,
+        lastmod: lastmod,
+        priority: doc.type === 'blog' ? '0.8' : '0.7',
+        changefreq: 'weekly'
+      });
+    });
+
+    // Generate XML
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(url => `  <url>
+    <loc>${url.loc}</loc>
+    ${url.lastmod ? `<lastmod>${url.lastmod.split('T')[0]}</lastmod>` : ''}
+    <changefreq>${url.changefreq}</changefreq>
+    <priority>${url.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+    res.header('Content-Type', 'application/xml');
+    res.send(sitemap);
+  } catch (error) {
+    logger.error('Error generating sitemap', { error: error.message });
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
 app.get('/health', async (req, res) => {
   const dbHealth = await database.healthCheck();
   res.json({

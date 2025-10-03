@@ -37,7 +37,7 @@ function displayContentFeed(contentList) {
                             <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
                         </div>
                     </div>
-                    <div class="no-content-message">
+                    <div class="no-content-message" data-nosnippet>
                         // NO CONTENT FOUND
                     </div>
                 </div>
@@ -256,7 +256,7 @@ async function loadComments(contentId, contentType = 'blog') {
 
         if (comments.length === 0) {
             const noCommentsClass = contentType === 'forum' ? 'no-replies-forum' : 'no-comments-blog';
-            commentsList.innerHTML = `<p class="${noCommentsClass}"></p>`;
+            commentsList.innerHTML = `<p class="${noCommentsClass}" data-nosnippet></p>`;
             return;
         }
 

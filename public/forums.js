@@ -117,7 +117,7 @@ function displayCategories(categories) {
                         <div class="terminal-subtitle">Forums</div>
                         <div></div>
                     </div>
-                    <div class="no-content-message">
+                    <div class="no-content-message" data-nosnippet>
                         // NO CATEGORIES FOUND
                     </div>
                 </div>
@@ -211,7 +211,7 @@ function displayForumPosts(postsList) {
                             <button class="sort-btn ${currentSort === 'top' ? 'active' : ''}" data-sort="top" onclick="setSort('top')">Top</button>
                         </div>
                     </div>
-                    <div class="no-content-message">
+                    <div class="no-content-message" data-nosnippet>
                         // NO FORUMS FOUND
                     </div>
                 </div>
@@ -389,7 +389,7 @@ async function loadComments(contentId) {
         const commentsList = document.getElementById(`comments-list-${contentId}`);
 
         if (comments.length === 0) {
-            commentsList.innerHTML = '<p class="no-replies-forum"></p>';
+            commentsList.innerHTML = '<p class="no-replies-forum" data-nosnippet></p>';
             return;
         }
 
@@ -632,6 +632,9 @@ function showForumView(categorySlug) {
     if (forumSubtitle) {
         forumSubtitle.textContent = categoryName;
     }
+
+    // Update page title
+    document.title = `Sanctum | Forums | ${categoryName}`;
 
     // Show create post button if logged in
     if (currentUser) {

@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Sanctum - A modern community platform for blogs and forums">
+    <meta name="keywords" content="sanctum, blog, forum, community, discussion">
+    <meta name="author" content="Sanctum">
+    <meta name="copyright" content="Sanctum">
     <title>Sanctum</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/theme.css">
@@ -23,22 +28,22 @@
                 </div>
             </div>
             <div class="mobile-nav" id="mobile-nav">
-                <a href="/blogs" class="nav-item">Blogs</a>
-                <a href="/forums" class="nav-item">Forums</a>
+                <button class="nav-item" onclick="window.location.href='/blogs'">Blogs</button>
+                <button class="nav-item" onclick="window.location.href='/forums'">Forums</button>
             </div>
             <div class="user-auth-section">
                 <div id="user-info" class="user-info-header">
                     <span id="user-name-header"></span>
                 </div>
                 <div id="auth-section">
-                    <div id="loading" class="loading" style="display:none;">Loading...</div>
+                    <div id="loading" class="loading" style="display:none;" data-nosnippet>Loading...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div id="content-loading">
+        <div id="content-loading" data-nosnippet>
             <div class="content-item page-home">
                 <div class="no-content-message">
                     // LOADING...
