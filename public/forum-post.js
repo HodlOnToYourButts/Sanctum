@@ -22,7 +22,9 @@ function getCategorySlug(categorySlug) {
 // Get post ID from URL
 function getPostId() {
     const pathParts = window.location.pathname.split('/');
-    return pathParts[pathParts.length - 1];
+    const uuid = pathParts[pathParts.length - 1];
+    // Add forum: prefix for API calls
+    return `forum:${uuid}`;
 }
 
 async function checkAuth() {
@@ -555,7 +557,9 @@ async function demotePost() {
 }
 
 function editPost() {
-    window.location.href = `/forums/edit/${postId}`;
+    // Strip the forum: prefix for the URL
+    const uuid = postId.replace('forum:', '');
+    window.location.href = `/forums/edit/${uuid}`;
 }
 
 function editReply(replyId) {

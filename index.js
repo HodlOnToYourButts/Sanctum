@@ -213,12 +213,46 @@ app.get('/blogs/create', (req, res) => {
   res.sendFile(__dirname + '/public/blog-edit.html');
 });
 
-app.get('/blogs/edit/:id', (req, res) => {
-  res.sendFile(__dirname + '/public/blog-edit.html');
+app.get('/blogs/edit/:id', async (req, res) => {
+  try {
+    const db = database.getDb();
+    const fullId = `blog:${req.params.id}`;
+    const content = await db.get(fullId);
+
+    // Verify it's actually a blog post
+    if (content.type !== 'blog') {
+      return res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+        if (err) res.status(404).send('Content not found');
+      });
+    }
+
+    res.sendFile(__dirname + '/public/blog-edit.html');
+  } catch (error) {
+    res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+      if (err) res.status(404).send('Content not found');
+    });
+  }
 });
 
-app.get('/blogs/view/:id', (req, res) => {
-  res.sendFile(__dirname + '/public/blog-post.html');
+app.get('/blogs/view/:id', async (req, res) => {
+  try {
+    const db = database.getDb();
+    const fullId = `blog:${req.params.id}`;
+    const content = await db.get(fullId);
+
+    // Verify it's actually a blog post
+    if (content.type !== 'blog') {
+      return res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+        if (err) res.status(404).send('Content not found');
+      });
+    }
+
+    res.sendFile(__dirname + '/public/blog-post.html');
+  } catch (error) {
+    res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+      if (err) res.status(404).send('Content not found');
+    });
+  }
 });
 
 // Forum routes
@@ -238,12 +272,46 @@ app.get('/forums/create/:category', (req, res) => {
   res.sendFile(__dirname + '/public/forum-edit.html');
 });
 
-app.get('/forums/edit/:id', (req, res) => {
-  res.sendFile(__dirname + '/public/forum-edit.html');
+app.get('/forums/edit/:id', async (req, res) => {
+  try {
+    const db = database.getDb();
+    const fullId = `forum:${req.params.id}`;
+    const content = await db.get(fullId);
+
+    // Verify it's actually a forum post
+    if (content.type !== 'forum') {
+      return res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+        if (err) res.status(404).send('Content not found');
+      });
+    }
+
+    res.sendFile(__dirname + '/public/forum-edit.html');
+  } catch (error) {
+    res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+      if (err) res.status(404).send('Content not found');
+    });
+  }
 });
 
-app.get('/forums/view/:id', (req, res) => {
-  res.sendFile(__dirname + '/public/forum-post.html');
+app.get('/forums/view/:id', async (req, res) => {
+  try {
+    const db = database.getDb();
+    const fullId = `forum:${req.params.id}`;
+    const content = await db.get(fullId);
+
+    // Verify it's actually a forum post
+    if (content.type !== 'forum') {
+      return res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+        if (err) res.status(404).send('Content not found');
+      });
+    }
+
+    res.sendFile(__dirname + '/public/forum-post.html');
+  } catch (error) {
+    res.status(404).sendFile(__dirname + '/public/404.html', (err) => {
+      if (err) res.status(404).send('Content not found');
+    });
+  }
 });
 
 // === LEGACY URL REDIRECTS ===

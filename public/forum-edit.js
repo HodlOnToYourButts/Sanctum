@@ -10,7 +10,9 @@ function initializeMode() {
 
     if (pathParts.includes('edit')) {
         isEditMode = true;
-        postId = pathParts[pathParts.length - 1];
+        const uuid = pathParts[pathParts.length - 1];
+        // Add forum: prefix for API calls
+        postId = `forum:${uuid}`;
         document.getElementById('page-title').textContent = 'Edit Forum Post | Sanctum';
         document.title = 'Edit Forum Post | Sanctum';
         document.getElementById('page-heading').textContent = 'Edit Forum Post';
@@ -139,7 +141,9 @@ function showError(message) {
 
 function cancelEdit() {
     if (isEditMode) {
-        window.location.href = `/forums/view/${postId}`;
+        // Strip the forum: prefix for the URL
+        const uuid = postId.replace('forum:', '');
+        window.location.href = `/forums/view/${uuid}`;
     } else {
         window.location.href = '/forums';
     }
@@ -196,9 +200,11 @@ document.getElementById('forum-form').addEventListener('submit', async (e) => {
         if (response.ok) {
             const result = await response.json();
             const resultId = result._id || result.id || postId;
+            // Strip the forum: prefix for the URL
+            const uuid = resultId.replace('forum:', '');
 
             alert(isEditMode ? 'Forum post updated successfully!' : 'Forum post created successfully!');
-            window.location.href = `/forums/view/${resultId}`;
+            window.location.href = `/forums/view/${uuid}`;
         } else {
             const error = await response.json();
             throw new Error(error.error || 'Failed to save forum post');

@@ -6,7 +6,9 @@ let postId = null;
 // Get post ID from URL
 function getPostId() {
     const pathParts = window.location.pathname.split('/');
-    return pathParts[pathParts.length - 1];
+    const uuid = pathParts[pathParts.length - 1];
+    // Add blog: prefix for API calls
+    return `blog:${uuid}`;
 }
 
 // Custom functions for blog post page
@@ -371,7 +373,9 @@ async function demoteFromFrontPage() {
 }
 
 function editPost() {
-    window.location.href = `/blogs/edit/${postId}`;
+    // Strip the blog: prefix for the URL
+    const uuid = postId.replace('blog:', '');
+    window.location.href = `/blogs/edit/${uuid}`;
 }
 
 async function togglePostEnabled(enable) {

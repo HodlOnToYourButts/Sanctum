@@ -283,9 +283,9 @@ function displayForumPosts(postsList) {
                 </div>
                 <div class="forum-col-topic">
                     <div class="forum-topic-container">
-                        <div class="forum-topic-title" onclick="viewFullPost('${item._id}')">
+                        <a href="/forums/view/${item._id.replace('forum:', '')}" class="forum-topic-title">
                             <span class="forum-prefix">>></span> ${escapeHtml(item.title)}${item.featured ? '<span class="featured-badge">★</span>' : ''}
-                        </div>
+                        </a>
                     </div>
                 </div>
                 <div class="forum-col-author">

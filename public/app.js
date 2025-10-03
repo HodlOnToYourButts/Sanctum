@@ -72,7 +72,7 @@ function displayContentFeed(contentList) {
                     <div class="blog-title-section">
                         <span class="vote-score-left">${item.votes.score}</span>
                         <div>
-                            <div class="content-title clickable-title" onclick="viewFullPost('${item._id}')">${escapeHtml(item.title)}</div>
+                            <a href="${item.type === 'forum' ? `/forums/view/${item._id.replace('forum:', '')}` : `/blogs/view/${item._id.replace('blog:', '')}`}" class="content-title clickable-title">${escapeHtml(item.title)}</a>
                             <div class="content-meta">
                                 By ${escapeHtml(item.author_name || 'Unknown')} •
                                 ${new Date(item.created_at).toLocaleDateString()}

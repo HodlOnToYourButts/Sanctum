@@ -9,7 +9,9 @@ function initializeMode() {
 
     if (path.includes('/edit/')) {
         isEditMode = true;
-        blogId = path.split('/').pop();
+        const uuid = path.split('/').pop();
+        // Add blog: prefix for API calls
+        blogId = `blog:${uuid}`;
         document.getElementById('page-title').textContent = 'Edit Blog | Sanctum';
         document.title = 'Edit Blog | Sanctum';
         document.getElementById('page-heading').textContent = 'Edit Blog';
@@ -131,7 +133,9 @@ function showError(message) {
 
 function cancelEdit() {
     if (isEditMode) {
-        window.location.href = `/blogs/view/${blogId}`;
+        // Strip the blog: prefix for the URL
+        const uuid = blogId.replace('blog:', '');
+        window.location.href = `/blogs/view/${uuid}`;
     } else {
         window.location.href = '/blogs';
     }
@@ -186,9 +190,11 @@ document.getElementById('blog-form').addEventListener('submit', async (e) => {
         if (response.ok) {
             const result = await response.json();
             const resultId = result._id || result.id || blogId;
+            // Strip the blog: prefix for the URL
+            const uuid = resultId.replace('blog:', '');
 
             alert(isEditMode ? 'Blog updated successfully!' : 'Blog created successfully!');
-            window.location.href = `/blogs/view/${resultId}`;
+            window.location.href = `/blogs/view/${uuid}`;
         } else {
             const error = await response.json();
             throw new Error(error.error || 'Failed to save blog');

@@ -614,6 +614,7 @@ body::before {
     transition: color 0.2s ease;
     display: inline-block;
     max-width: fit-content;
+    text-decoration: none;
 }
 
 /* Forum header layout */
@@ -826,6 +827,7 @@ body::before {
     cursor: pointer;
     font-family: 'Courier New', monospace;
     overflow: hidden;
+    text-decoration: none;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: flex;
